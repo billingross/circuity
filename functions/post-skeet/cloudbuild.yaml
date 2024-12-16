@@ -1,0 +1,15 @@
+steps:
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  args: [
+         'gcloud', 'functions', 'deploy', 'circuity-post-skeet',
+         '--project=${PROJECT_ID}',
+         '--source=functions/post-skeet',
+         '--memory=256MB',
+         '--max-instances=20',
+         '--entry-point=post_skeet_http',
+         '--runtime=python312',
+         '--region=us-west2',
+         '--gen2',
+         '--trigger-http',
+         '--update-labels=user=circuity',
+  ]
