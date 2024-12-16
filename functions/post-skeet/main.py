@@ -2,7 +2,6 @@ import os
 import re
 import pdb
 import json
-import yaml
 import logging
 
 # Functions framework for Python: https://pypi.org/project/functions-framework/
