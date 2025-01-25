@@ -19,7 +19,59 @@ bucket = storage_client.bucket(BUCKET_NAME)
 connected_characters_object = bucket.blob(CONNECTED_CHARACTERS_OBJECT)
 connected_characters = connected_characters_object.download_as_bytes().get_json()
 
-def attempt_to_create_circuit(original_object, character, bucket):
+def take_step(graph_object):
+	"""To take a step, I will first look at the metadata of the current object to see what next steps are listed. From the list of steps, I will randomly pick one. The only factor I will consider when weighting my options will be their power score. I want to pick a powerful one.
+
+	Example object metadata:
+		model e: {"nextCharacter_powerValue_absolutePowerValue": "uri"}
+	             {"a_0.12_7.34": "gs://path/to/object"}
+	The only metadata attached to objects are destinations.
+
+	Args:
+		graph_object (google.cloud.storage.blob.Blob): The object with potential destinations in its metadata.
+	Returns:
+		address (str): Address of the next object I have chosen.
+	"""
+	metadata = graph_object.metadata
+
+	# possible_destinations[self_link] = powerValue
+	possible_destinations = {self_link: path.split('_')[1] for path, self_link in metadata.items()}
+	destination = random.choices(
+								 population = possible_destinations.keys(),
+								 weights = possible_destinations.values()
+	)
+	return destination
+
+def take_step_recursive(circuit_steps, maximum_circuit_length):
+	last_step_object = circuit_steps[-1]
+	last_step_metadata = last_step_object.metadata
+	possible_destinations = {self_link: path.split('_')[1] for path, self_link in last_step_metadata.items()}
+	next_step_address = random.choices(
+							   population = possible_destinations.keys(),
+							   weights = possible_destinations.values(),
+							   k = 1
+	)
+
+	if next_step_address == original_object.self_link:
+		# Success! I have created a circuit. I will return the most powerful object in this circuit along with the metadata circuit, ordered starting from the most powerful object.
+		# most_powerful_object = TODO
+		return True, circuit_steps
+	elif new_object_address == character_object.self_link:
+		# I created a circuit that did not include the original node. I will report my failure.
+		logging.debug(f"I failed to create a circuit that included the original node, {original_object.self_link}. I created a circuit of length {len(circuit_steps)} that started and ended at {character_object.self_link}.")
+		return False, circuit_steps
+	else:
+		circuit_steps.append(new_object_address)
+
+	# If I have reached the maximum walk length then I will give up trying to create a circuit.
+	if len(circuit_steps) >= maximum_circuit_length:
+		logging.debug(f"I failed to create a circuit in {len(circuit_steps)}. I started at {original_object.self_link} and ended at {new_object_address}.")
+		return False, circuit_steps
+	# Otherwise, I will keep randomly walking.
+	else:
+		return take_step(circuit_steps, maximum_circuit_length)
+
+def attempt_to_create_circuit_new(original_object, character, bucket, maximum_circuit_length=100):
 	"""From the original object, I find a path to an object of the specified character. Then I go forward until I find an object that goes up to a bigger object. From that big object, I go down as far as possible. When it is impossible for me to go down, I go forward until I find either the original object or the character object. If I find the original object first, I win. If I find the character object first, I lose. I have a fixed amount of attempts to try to complete this circuit.
 
 	Args:
@@ -28,7 +80,9 @@ def attempt_to_create_circuit(original_object, character, bucket):
 	Returns:
 
 	"""
-	#character_object = find_character_node(search_start_object, character)
+	# The initial step in the circuit is the original object
+	circuit_steps = [original_object.self_link]
+
 	original_metadata = original_object.metadata
 	# I filter out any metadata keys whose first character does not match the character I am looking for.
 	matching_character_keys = [key for key in original_metadata.keys() if key[:1] == character]
@@ -38,8 +92,36 @@ def attempt_to_create_circuit(original_object, character, bucket):
 
 	# Now that I have the highest value character address, I want to get that object
 	character_object = bucket.get_blob(highest_value_character_address)
-	# With that object I am going to find the shortest route up.
-	# (January 19, 2025) TODO
+	# Add the character object address to the list of steps in the circuit I am trying to make.
+	circuit_steps.append(character_object.self_link)
+
+	return take_step(circuit_steps, maximum_circuit_length)
+	"""
+	while True:
+		# From the character object I am going to randomly walk orthogonally along a series of weighted sets until I find the original object or the character object.
+		# I only want to return to the client the object that induces the biggest power differential along the walk; the punchline. I need to track the change in power at every step of my walk.
+		new_object_address = take_step(character_object)
+		# I only want the original node to be included in the circuit (1) time, so if I walk back to it, I am going to return a result before adding it to the list of steps again.
+		# [original, character, object, bigObject, object, original]
+		if new_object_address == original_object.self_link:
+			# Success! I have created a circuit. I will return the most powerful object in this circuit along with the metadata circuit, ordered starting from the most powerful object.
+			most_powerful_object = 
+
+
+		elif new_object_address == character_object.self_link:
+			# I created a circuit that did not include the original node. I will report my failure.
+			logging.debug(f"I failed to create a circuit that included the original node, {original_object.self_link}. I created a circuit of length {len(circuit_steps)} that started and ended at {character_object.self_link}.")
+			return False
+		else:
+			circuit_steps.append(new_object_address)
+
+		# If I have reached the maximum walk length then I will give up trying to create a circuit.
+		if len(circuit_steps) >= maximum_circuit_length:
+			logging.debug(f"I failed to create a circuit in {len(circuit_steps)}. I started at {original_object.self_link} and ended at {new_object_address}.")
+			return False
+		else:
+			return take_step(circuit_steps)
+	"""
 	
 def attempt_to_create_circuit(character_object, origin_object, tries_remaining):
 	object_that_goes_up = find_node_that_goes_up(character_object.self_link)
