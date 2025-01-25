@@ -45,7 +45,7 @@ def take_step(graph_object):
 def take_step_recursive(circuit_steps, maximum_circuit_length):
 	last_step_object = circuit_steps[-1]
 	last_step_metadata = last_step_object.metadata
-	possible_destinations = {self_link: path.split('_')[1] for path, self_link in last_step_metadata.items()}
+	possible_destinations = {self_link: float(path.split('_')[1]) for path, self_link in last_step_metadata.items()}
 	next_step_address = random.choices(
 							   population = possible_destinations.keys(),
 							   weights = possible_destinations.values(),
@@ -71,7 +71,7 @@ def take_step_recursive(circuit_steps, maximum_circuit_length):
 	else:
 		return take_step(circuit_steps, maximum_circuit_length)
 
-def attempt_to_create_circuit_new(original_object, character, bucket, maximum_circuit_length=100):
+def attempt_to_trace_circuit(original_object, character, bucket, maximum_circuit_length=100):
 	"""From the original object, I find a path to an object of the specified character. Then I go forward until I find an object that goes up to a bigger object. From that big object, I go down as far as possible. When it is impossible for me to go down, I go forward until I find either the original object or the character object. If I find the original object first, I win. If I find the character object first, I lose. I have a fixed amount of attempts to try to complete this circuit.
 
 	Args:
@@ -122,7 +122,12 @@ def attempt_to_create_circuit_new(original_object, character, bucket, maximum_ci
 		else:
 			return take_step(circuit_steps)
 	"""
-	
+
+def make_circuit(circuit_path):
+	"""When do I make a circuit? When I receive a space character (" "), I create a circuit. But first I check to see whether a circuit for this string of characters already exists. I get the last object to be added to the circuit path and then randomly sample destinations from that object, and checking whether any of those destinations match the first address in the circuit path. If so, I increment the value of the path from the last address in the path to the big object and return the big object. This big object then supplants the original object in the circuit path.
+	"""
+	raise NotImplementedError
+
 def attempt_to_create_circuit(character_object, origin_object, tries_remaining):
 	object_that_goes_up = find_node_that_goes_up(character_object.self_link)
 	# Now I have a node that will allow me to go up. I want to go up as high as I can because things that are higher are bigger and bigger is better. Sharing one big idea is more efficient than sharing a bunch of small ideas, but only if the big idea is relevant. In order to predict the relevance of the big idea I am going to try to complete a circuit that goes from the big node to the starting node.
