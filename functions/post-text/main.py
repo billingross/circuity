@@ -71,6 +71,17 @@ def take_step_recursive(circuit_steps, maximum_circuit_length):
 	else:
 		return take_step(circuit_steps, maximum_circuit_length)
 
+def attempt_to_trace_circuit_v2(circuit_steps, new_character, bucket, maximum_circuit_length=100):
+	current_step = circuit_steps[-1]
+	current_metadata = current_step.metadata
+
+	if new_character == ' ':
+		# Force circuit creation
+		return circuit_steps
+		circuit_steps = make_circuit(circuit_steps)
+
+	matching_character_keys = [key for key in current_metadata.keys() if key[:1] == character]
+
 def attempt_to_trace_circuit(original_object, character, bucket, maximum_circuit_length=100):
 	"""From the original object, I find a path to an object of the specified character. Then I go forward until I find an object that goes up to a bigger object. From that big object, I go down as far as possible. When it is impossible for me to go down, I go forward until I find either the original object or the character object. If I find the original object first, I win. If I find the character object first, I lose. I have a fixed amount of attempts to try to complete this circuit.
 
@@ -86,7 +97,7 @@ def attempt_to_trace_circuit(original_object, character, bucket, maximum_circuit
 	original_metadata = original_object.metadata
 	# I filter out any metadata keys whose first character does not match the character I am looking for.
 	matching_character_keys = [key for key in original_metadata.keys() if key[:1] == character]
-	# I sort the matching keys in reverse order so that the highest values are at the beginning and then I get the highest value key. I am software that runs on a computer.
+	# I sort the matching keys in reverse order so that the highest values are at the beginning and then I get the highest value key.
 	highest_value_character_key = sorted(matching_character_keys, reverse=True)[0]
 	highest_value_character_address = original_metadata[highest_value_character_key]
 
@@ -123,7 +134,7 @@ def attempt_to_trace_circuit(original_object, character, bucket, maximum_circuit
 			return take_step(circuit_steps)
 	"""
 
-def make_circuit(circuit_path):
+def make_circuit(circuit_steps):
 	"""When do I make a circuit? When I receive a space character (" "), I create a circuit. But first I check to see whether a circuit for this string of characters already exists. I get the last object to be added to the circuit path and then randomly sample destinations from that object, and checking whether any of those destinations match the first address in the circuit path. If so, I increment the value of the path from the last address in the path to the big object and return the big object. This big object then supplants the original object in the circuit path.
 	"""
 	raise NotImplementedError
