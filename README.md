@@ -1,6 +1,8 @@
 # circuity
 A circuitous search algorithm
 
+Check out my development blog at [https://billingross.github.io/circuity/](https://billingross.github.io/circuity/).
+
 # Development basics
 
 ## To install new commits locally
