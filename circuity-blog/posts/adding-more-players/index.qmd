@@ -19,6 +19,8 @@ To make it easier for me to test additional queries I can convert the code I gen
 
 ## Load dependencies
 ```{python}
+#| code-fold: true
+
 import json
 import scipy
 import itertools
@@ -26,6 +28,8 @@ import itertools
 
 ## Define functions
 ```{python}
+#| code-fold: true
+
 def file_traversal_search(current_file_path, files_to_look_for, files_traversed=[]):
     """Find a path from the current file to one of the ones I am looking for.
 
@@ -62,6 +66,8 @@ def file_traversal_search(current_file_path, files_to_look_for, files_traversed=
 
 Test the `file_traversal_search()` function.
 ```{python}
+#| code-fold: true
+
 first_file = 'database/player/age.json'
 last_file = 'database/player/first-name.json'
 
@@ -73,6 +79,8 @@ result
 ```
 
 ```{python}
+#| code-fold: true
+
 def retrieve_values(metadata_file, indexes):
     """Retrieve the values from the specified indexes of a database metadata file.
     
@@ -90,6 +98,8 @@ def retrieve_values(metadata_file, indexes):
 ```
 
 ```{python}
+#| code-fold: true
+
 def get_query_locations(query, index_dictionary):
     query_words = query.split()
 
@@ -102,6 +112,8 @@ def get_query_locations(query, index_dictionary):
 ```
 
 ```{python}
+#| code-fold: true
+
 def find_query_loop(query_word_location_lists):
     # Add the first node to the end of the list to complete the loop
     query_word_location_lists.append(query_word_location_lists[0])
@@ -170,6 +182,8 @@ def find_query_loop(query_word_location_lists):
 ```
 
 ```{python}
+#| code-fold: true
+
 def get_response_nodes(edges):
     response_node_references = []
     for edge_path in edges:
@@ -179,6 +193,8 @@ def get_response_nodes(edges):
 ```
 
 ```{python}
+#| code-fold: true
+
 def lookup_metadata(response_node_references):
     metadata_values = []
     for reference in response_node_references:
@@ -193,6 +209,8 @@ def lookup_metadata(response_node_references):
 ```
 
 ```{python}
+#| code-fold: true
+
 def lookup_actual_values(metadata_values):
     if not metadata_values:
         return None    
@@ -209,6 +227,8 @@ def lookup_actual_values(metadata_values):
 ```
 
 ```{python}
+#| code-fold: true
+
 def format_response(response_values):
     if response_values:
         response_strings = [str(value) for value in response_values]
