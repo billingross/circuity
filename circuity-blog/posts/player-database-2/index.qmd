@@ -82,7 +82,7 @@ def file_traversal_search(current_file_path, files_to_look_for, files_traversed=
 Test the `file_traversal_search()` function.
 ```{python}
 first_file = 'database/player/age.json'
-last_file = 'database/player/name.json'
+last_file = 'database/player/first-name.json'
 
 result = file_traversal_search(
                                current_file_path = first_file, 
@@ -114,7 +114,9 @@ def retrieve_values(metadata_file, indexes):
 database_files = [
     "database/index.json",
     "database/player/age.json",
-    "database/player/name.json",
+    #"database/player/name.json",
+    "database/player/first-name.json",
+    "database/player/last-name.json",
     "database/player/position.json"
 ]
 ```
@@ -221,6 +223,8 @@ for query_word_index, this_word_locations in enumerate(sorted_word_location_list
     edges.append(traversal_paths)
 edges
 ```
+
+## Extract relevant metadata references
 Now I have an `edges` variable which contains a list of lists of all the files required to traverse from each word in my query statement to the next word and then back to the original word - creating a database loop.
 
 Each edge in `edges` is really a path of edges. Within each of those paths I only need the first element which corresponds to a query word. And within the edge path I only need the `start` value which points to the query word. All of the other elements in the list are only valuable for the sake of validating the loop path.
@@ -234,6 +238,7 @@ for edge_path in edges:
 response_node_references
 ```
 
+## Retrieve response metadata values
 Now that I know where the metadata for each response node is located I want to get the metadata values from the source file and index defined in each `start_node`. I defined a `retrieve_values()` function to do so.
 ```{python}
 metadata_values = []
@@ -248,6 +253,7 @@ for reference in response_node_references:
 metadata_values
 ```
 
+## Map metadata values to actual values stored in the index
 Now that I have the metadata values of my query response, I can get the corresponding data values from the `index.json` file.
 ```{python}
 response_values = []
@@ -259,4 +265,11 @@ for metadata_value in metadata_values:
     else:
         response_values.append(metadata_value)
 response_values
+```
+
+## Return query response
+I can flatten the response into a string so that it matches the query format.
+```{python}
+print(f"Query: {query}.")
+print(f"Response: {" ".join(response_values)}.")
 ```
