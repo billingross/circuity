@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Paul Billing-Ross">
+<meta name="dcterms.date" content="2025-08-20">
 
-<title>Circuity</title>
+<title>Analyzing Mina Picks – Circuity</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,28 +22,61 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-c1fac2584b48ed01fb6e278e36375074.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-c1fac2584b48ed01fb6e278e36375074.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -69,77 +104,19 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
 
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light">
+<body class="nav-fixed fullcontent quarto-light">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top quarto-banner">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Circuity</span>
     </a>
   </div>
@@ -150,7 +127,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -173,134 +150,175 @@ window.Quarto = {
 <!-- content -->
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Circuity</h1>
-                      </div>
+    <div class="quarto-title column-body">
+      <h1 class="title">Analyzing Mina Picks</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">football</div>
+                <div class="quarto-category">analysis</div>
+              </div>
+                  </div>
   </div>
     
   
-  <div class="quarto-title-meta column-page-left">
+  <div class="quarto-title-meta">
 
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Paul Billing-Ross </p>
+            </div>
+    </div>
       
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">August 20, 2025</p>
+      </div>
+    </div>
     
       
     </div>
     
   
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(3)</span></div><div class="category" data-category="YW5hbHlzaXM=">analysis <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZGF0YWJhc2U=">database <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Zm9vdGJhbGw=">football <span class="quarto-category-count">(2)</span></div></div></div>
+    
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
 
 
 
 
-
-
-
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="ZGF0YWJhc2U=" data-listing-date-sort="1758092400000" data-listing-file-modified-sort="1758156573457" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="13" data-listing-word-count-sort="2465">
-<div class="thumbnail"><a href="./posts/player-database-2/index.html" class="no-external">
-
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/player-database-2/index.html" class="no-external">Creating a database of players 2</a>
-</h3>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('ZGF0YWJhc2U='); return false;">database</div>
-
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>Mina Kimes is an ESPN NFL analyst. I want to find out whether her football predictions are significantly better than her peers. I am using her podcast, The Mina Kimes Show featuring Lenny, as the primary source for predictions about the 2024 National Football League season and the 2025 FTN Football Almanac as my source of truth.</p>
+<p>I will compare the predictions she made about the best offensive and defensive teams of the 2024-2025 National Football League seasons to her peers which she invited to make the same picks on her podcast episodes: “Goff We Go: Picking the Top 10 Offenses of 2024” and “Jets Get It On: Ranking the Top Defenses of 2024”.</p>
+</section>
+<section id="methods" class="level1">
+<h1>Methods</h1>
+<section id="loading-packages" class="level2">
+<h2 class="anchored" data-anchor-id="loading-packages">Loading Packages</h2>
+<p>Python packages are software tools that other Python developers have created and share freely with the rest of the world. I can use the ready-made solutions that they have programmed into these packages rather than trying to invent my own solution to a solved problem.</p>
+<div id="cc52d90b" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> csv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="delink listing-description"><a href="./posts/player-database-2/index.html" class="no-external">
-In the last post I was prototyping a method for storing player data as metadata in a database. My approach was to store all of the words in an <code>index.json</code> file. This would be…
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/player-database-2/index.html" class="no-external">
-<div class="listing-date">
-Sep 17, 2025
-</div>
-<div class="listing-author">
-Paul Billing-Ross
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="Zm9vdGJhbGw=" data-listing-date-sort="1755673200000" data-listing-file-modified-sort="1757442186374" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="20" data-listing-word-count-sort="3986">
-<div class="thumbnail"><a href="./posts/player-database/index.html" class="no-external">
-
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/player-database/index.html" class="no-external">Creating a database of players</a>
-</h3>
-<div class="listing-categories">
-
-<div class="listing-category" onclick="window.quartoListingCategory('Zm9vdGJhbGw='); return false;">football</div>
-
-</div>
-<div class="delink listing-description"><a href="./posts/player-database/index.html" class="no-external">
-I want to develop a database of football players that is keyword searchable as a standard search engine is. My intention is to store words in a central index file and…
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/player-database/index.html" class="no-external">
-<div class="listing-date">
-Aug 20, 2025
-</div>
-<div class="listing-author">
-Paul Billing-Ross
-</div>
-</a>
+</section>
+<section id="load-comma-separated-values-file" class="level2">
+<h2 class="anchored" data-anchor-id="load-comma-separated-values-file">Load comma separated values file</h2>
+<p>I created a comma separated values file with all of the data I intend to use for this analysis. I parsed the analyst picks from the podcast transcripts and audio and have loaded it into a Pandas dataframe in Python for viewing.</p>
+<div id="96224a3d" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'mina-2024-picks.csv'</span>) <span class="im">as</span> csv_file:</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    mina_2024_picks <span class="op">=</span> csv.reader(csv_file)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    mina_2024_pick_rows <span class="op">=</span> [row <span class="cf">for</span> row <span class="kw">in</span> mina_2024_picks]</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>mina_2024_pick_rows[:<span class="dv">2</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<pre><code>[['Analyst',
+  'Team',
+  'Category',
+  'Predicted Rank',
+  'FTN 2025 Football Almanac Ranking',
+  'Difference Between Rankings',
+  'Year',
+  'Source'],
+ ['Mina Kimes',
+  'San Francisco 49ers',
+  'Offense',
+  '1',
+  '9',
+  '8',
+  '2024',
+  'Goff We Go']]</code></pre>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="2" data-categories="Zm9vdGJhbGwlMkNhbmFseXNpcw==" data-listing-date-sort="1755673200000" data-listing-file-modified-sort="1757448535251" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="757">
-<div class="thumbnail"><a href="./posts/analyze-picks/index.html" class="no-external">
+</section>
+<section id="reorient-data-into-columns" class="level2">
+<h2 class="anchored" data-anchor-id="reorient-data-into-columns">Reorient data into columns</h2>
+<p>I have converted every row in my table into a list in Python. Now I want to convert my row oriented lists into column oriented lists so that all of the data points for a particular column are stored together. This will make it easier for me to perform aggregation operations on a particular metric such as calculating the average difference between rankings.</p>
+<div id="96897c6a" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>columnar_picks <span class="op">=</span> [<span class="bu">list</span>(index) <span class="cf">for</span> index <span class="kw">in</span> <span class="bu">zip</span>(<span class="op">*</span>mina_2024_pick_rows)]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>columnar_picks[<span class="dv">0</span>][:<span class="dv">2</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>['Analyst', 'Mina Kimes']</code></pre>
+</div>
+</div>
+</section>
+<section id="count-the-number-of-picks-per-analyst" class="level2">
+<h2 class="anchored" data-anchor-id="count-the-number-of-picks-per-analyst">Count the number of picks per analyst</h2>
+<p>My first step in analyzing data is to characterize it by generating basic summary statistics. Looking at the first (2) rows of my table which include a header row as well as a single row of data, I can see that some rows have information represented as categories and some as numbers. This is a valuable distinction because I will need different methods to summarize numerical and categorical data. Numbers are easy to summarize because I can use standard mathematical algorithms like summing and counting. In the case of categorical data, the mathematical relationships between categories are not obvious. However, one thing that I can do is to count the number of occurrences of each category.</p>
+<section id="how-do-i-know-which-columns-contain-what-kind-of-data" class="level3">
+<h3 class="anchored" data-anchor-id="how-do-i-know-which-columns-contain-what-kind-of-data">How do I know which columns contain what kind of data?</h3>
+<p>In order to design a robust system of analysis, I want to make my analytical framework as generalizeable as possible. This means minimalizing the amount of assumptions I make about my data. To understand the type of data present in each of my columns I can use a list comprehension with the <code>isinstance()</code> function in order to get a list of the data type (string, integer, float, etc.) of each item in that column which I have represented in Python using a list. I can then convert that list of types into a set, which is a special type of list, so that I only retain unique values of the original list. This set will include all of the types of data present in my column. And because each type will only be present once in the set, I can count the length of the set to find out how many data types are present. If all of the data types are numerical, then I can apply mathematical algorithms to understand that column. If the column contains numerical and categorical data then I can treat that data as categorical since I do not have a method to naively predict how to map categorial data to numerical values.</p>
+</section>
+<section id="a-note-on-list-comprehensions" class="level3">
+<h3 class="anchored" data-anchor-id="a-note-on-list-comprehensions">A note on list comprehensions</h3>
+<p>List comprehensions follow the general syntax of “do this for each of these in those”. For example, calculate the length of this string for each string in those strings where a string is a string of characters.</p>
+</section>
+<section id="counting-the-number-of-data-types-present-in-each-column" class="level3">
+<h3 class="anchored" data-anchor-id="counting-the-number-of-data-types-present-in-each-column">Counting the number of data types present in each column</h3>
+<div id="aafab098" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>column_types <span class="op">=</span> [[<span class="bu">type</span>(item) <span class="cf">for</span> item <span class="kw">in</span> column[<span class="dv">1</span>:]] <span class="cf">for</span> column <span class="kw">in</span> columnar_picks]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>column_types[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<pre><code>[str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str,
+ str]</code></pre>
+</div>
+</div>
+<p>Here I can see that every item in my first column is of type <code>str</code> which means “string” in Python.</p>
+<div id="4ce9c07c" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>unique_column_types <span class="op">=</span> [<span class="bu">set</span>(column) <span class="cf">for</span> column <span class="kw">in</span> column_types]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>unique_column_types</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<pre><code>[{str}, {str}, {str}, {str}, {str}, {str}, {str}, {str}]</code></pre>
+</div>
+</div>
+<p>Now I can see that all of my columns contain purely string types. I think this is because when I imported my data into Python it registered all of the columns natively as strings.</p>
 
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
 
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/analyze-picks/index.html" class="no-external">Analyzing Mina Picks</a>
-</h3>
-<div class="listing-categories">
+</section>
+</section>
+</section>
 
-<div class="listing-category" onclick="window.quartoListingCategory('Zm9vdGJhbGw='); return false;">football</div>
-
-<div class="listing-category" onclick="window.quartoListingCategory('YW5hbHlzaXM='); return false;">analysis</div>
-
-</div>
-<div class="delink listing-description"><a href="./posts/analyze-picks/index.html" class="no-external">
-Mina Kimes is an ESPN NFL analyst. I want to find out whether her football predictions are significantly better than her peers. I am using her podcast, The Mina Kimes Show…
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/analyze-picks/index.html" class="no-external">
-<div class="listing-date">
-Aug 20, 2025
-</div>
-<div class="listing-author">
-Paul Billing-Ross
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";

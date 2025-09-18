@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Paul Billing-Ross">
+<meta name="dcterms.date" content="2025-08-20">
+
+<title>Creating a database of players – Circuity</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-c1fac2584b48ed01fb6e278e36375074.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Circuity</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Creating a database of players</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">football</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Paul Billing-Ross </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">August 20, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>I want to develop a database of football players that is keyword searchable as a standard search engine is. My intention is to store words in a central index file and represent the data structure using metadata stored in a series of JSON formatted lists with references to the index.</p>
+</section>
+<section id="methods" class="level1">
+<h1>Methods</h1>
+<p>The first use-case I am envisioning is searching for the position that Justin Blackmon plays using the phrase “Justin Blackmon position”. I am organizing this as a columnar database so that all of the values of a particular category such as “position” are all stored in the same file. Where do I start? First I need to understand all of the files in my database. I can organize them all into a directory named “database”.</p>
+<p>I intend to store all of my database files in JSON format and code everything in the Python programming language.</p>
+<p>I can code the paths to all of my database files directly into my code for now and worry about how to load them more systematically in the future. I can use a dictionary to define the structure of my database.</p>
+<section id="load-dependencies" class="level2">
+<h2 class="anchored" data-anchor-id="load-dependencies">Load dependencies</h2>
+<div id="21b1e3ca" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> itertools</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="define-database-structure-using-a-dictionary" class="level2">
+<h2 class="anchored" data-anchor-id="define-database-structure-using-a-dictionary">Define database structure using a dictionary</h2>
+<div id="d0c4326b" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>database_files <span class="op">=</span> [</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"database/index.json"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"database/player/age.json"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"database/player/name.json"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"database/player/position.json"</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="look-up-each-word-in-the-index" class="level2">
+<h2 class="anchored" data-anchor-id="look-up-each-word-in-the-index">Look up each word in the index</h2>
+<p>The index is naturally stored as a list of dictionaries. For the sake of reverse lookup this is useful and for the sake of lookup it is not. For the sake of looking up where all of these words are referenced I want to convert my index list into an index dictionary.</p>
+<div id="3f880c32" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">"database/index.json"</span>) <span class="im">as</span> file_handle:</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    index_list <span class="op">=</span> json.load(file_handle)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> {item[<span class="st">"value"</span>]: item[<span class="st">"references"</span>] <span class="cf">for</span> item <span class="kw">in</span> index_list}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>index</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="99">
+<pre><code>{'player': [{'source': 'database/player/name.json', 'index': 0},
+  {'source': 'database/player/age.json', 'index': 0},
+  {'source': 'database/player/position.json', 'index': 0}],
+ 'name': [{'source': 'database/player/name.json', 'index': 0}],
+ 'Justin': [{'source': 'database/player/name.json', 'index': 1}],
+ 'Blackmon': [{'source': 'database/player/name.json', 'index': 1}],
+ 'age': [{'source': 'database/player/age.json', 'index': 0}],
+ 'position': [{'source': 'database/player/position.json', 'index': 0}],
+ 'free': [{'source': 'database/player/position.json', 'index': 1}],
+ 'safety': [{'source': 'database/player/position.json', 'index': 1}]}</code></pre>
+</div>
+</div>
+</section>
+<section id="convert-each-location-from-a-list-to-a-tuple" class="level2">
+<h2 class="anchored" data-anchor-id="convert-each-location-from-a-list-to-a-tuple">Convert each location from a list to a tuple</h2>
+<p>I want to implement a list comprehension inside of a dictionary comprehension in order to convert each item in index.values() from a list of lists to a list of tuples. The locations of each word are stored in a dictionary where the key is the word and the value is a list of locations where that word occurs. Each location is stored as a (2) item list where the first item is the name of the file where the word occurs and the second item is the index of where that item occurs within the list of items in that file.</p>
+<p>A Python dictionary is a set of mappings from a single key to a set of values. The index file of my database is structured a a dictionary. Every other file in my database is structured as a list of items.</p>
+<p>Here I want to restructure my database index so that the values are structured as lists of tuples rather than lists of lists. A tuple is a special type of list that is immutable.</p>
+<div id="e62dbd3a" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">#new_index_dictionary = {key: [tuple(value) for value in values] for key, values in index.items()}</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#new_index_dictionary</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>I can think of this index as an address book of words where each word can have many addresses and those addresses correspond to where the word is used in this database and the database is a semantic represenation of ideas. I am creating a digital model of football players.</p>
+</section>
+<section id="search-for-query-terms" class="level2">
+<h2 class="anchored" data-anchor-id="search-for-query-terms">Search for query terms</h2>
+<p>How do I want to do searching? First I can split the query phrase into a list of words and then I can look up each word in the keys of the index dictionary. The corresponding values of each key store the position of that word in my database. I could get all of those positions and put them into a list. A list structure does not really make sense for storing positions because they are intended to be immutable. They are natively loaaded as lists because JSON does not have a way to represent tuples so I can do that conversion here as well.</p>
+<div id="e8e35881" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> <span class="st">"Justin Blackmon position"</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>query_words <span class="op">=</span> query.split(<span class="st">" "</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>query_words</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="101">
+<pre><code>['Justin', 'Blackmon', 'position']</code></pre>
+</div>
+</div>
+<div id="d698321a" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>query_word_location_lists <span class="op">=</span> []</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> word <span class="kw">in</span> query_words:</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Using the get method here will avoid errors in case any words are not in my dictionary</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">#query_word_location_lists.append(new_index_dictionary.get(word))</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    query_word_location_lists.append(index.get(word))</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>query_word_location_lists</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="102">
+<pre><code>[[{'source': 'database/player/name.json', 'index': 1}],
+ [{'source': 'database/player/name.json', 'index': 1}],
+ [{'source': 'database/player/position.json', 'index': 0}]]</code></pre>
+</div>
+</div>
+<p>I have defined my query statement as “Justin Blackmon position”. I then parse that statement into a list of (3) words: <code>["Justin", "Blackmon", "position"]</code>. When I look up the locations of these words I get a list of locations where I can find them. I think that I want to find the shortest loop that connects all of these words and one of the words is a variable name whose value I will need to look up before returning the results of my query.</p>
+<p>For each word in my query I have a list of locations where that word is located. One of the ways that I could optimize for searching is by trying to minimize the difference between indexes of neighboring word locations. I could sort each list by the index value which is the second one in each tuple. Something like…</p>
+<div id="66614de9" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>sorted_word_location_lists <span class="op">=</span> []</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> query_index, word_location_list <span class="kw">in</span> <span class="bu">enumerate</span>(query_word_location_lists):</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Sort the word location list by the index of the file where the word is located. </span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    sorted_word_location_list <span class="op">=</span> <span class="bu">sorted</span>(word_location_list, key<span class="op">=</span><span class="kw">lambda</span> location: location[<span class="st">"index"</span>])</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    sorted_word_location_lists.append(sorted_word_location_list)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>sorted_word_location_lists</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="103">
+<pre><code>[[{'source': 'database/player/name.json', 'index': 1}],
+ [{'source': 'database/player/name.json', 'index': 1}],
+ [{'source': 'database/player/position.json', 'index': 0}]]</code></pre>
+</div>
+</div>
+<p>I want to find a path through each word in my <code>sorted_word_location_lists</code>. I think a way that I can do that is by getting a unique list of files where each word is found and then walk from each of those files until I find a file that includes the next word or I find the file I started from because my files are linked to one another in a looping structure.</p>
+<p>I can write a separate function to perform the looping search.</p>
+<div id="628dbd63" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> source_traversal_search(source_path, sources_to_look_for, sources_traversed<span class="op">=</span>[]):</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Add the current file to the list of files traversed</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    sources_traversed.append(source_path)    </span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Check if the current file is the one that I am looking for</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">#sources_to_look_for = [location["source"] for location in locations_to_look_for]</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> source_path <span class="kw">in</span> sources_to_look_for:</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> sources_traversed</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(source_path, <span class="st">'r'</span>) <span class="im">as</span> source_handle:</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        source_data <span class="op">=</span> json.load(source_handle)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    next_source <span class="op">=</span> source_data[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> next_source <span class="kw">in</span> sources_to_look_for:</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>        sources_traversed.append(next_source)</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> sources_traversed</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> source_traversal_search(next_source, sources_to_look_for, sources_traversed)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now I can test my <code>looping_file_search()</code> function.</p>
+<div id="269dec2a" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>first_file <span class="op">=</span> <span class="st">'database/player/age.json'</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>last_file <span class="op">=</span> <span class="st">'database/player/name.json'</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> source_traversal_search(first_file, last_file)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>result</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="105">
+<pre><code>['database/player/age.json',
+ 'database/player/position.json',
+ 'database/player/name.json']</code></pre>
+</div>
+</div>
+<p>And now I have a data structure and a function for performing looping searches! <strong>Hooray!</strong></p>
+<p>I changed my mind and no longer think that creating a separate <code>word_location_sets</code> list is useful. It was helpful in allowing me to focus during development and now that I have established the basic mechanism I think that it is most useful to keep the file names and indexes together in the <code>sorted_word_location_lists</code> variable.</p>
+<div id="c7c8a721" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#word_location_sets = []</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">#for word_locations in sorted_word_location_lists:</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create a list of files where this word is located. By casting</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># this list as a set I can ensure that I do not have any </span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># duplicate locations.</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#    word_files = set([location[0] for location in word_locations])</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">#    word_location_sets.append(word_files)</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">#word_location_sets        </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>At the same time that I identify a valid path from the start word to the end word I also want to do all the “edge” math like calculating the difference between the indexes of the start and the end word or node.</p>
+<div id="99e1a037" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>sorted_word_location_lists</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="107">
+<pre><code>[[{'source': 'database/player/name.json', 'index': 1}],
+ [{'source': 'database/player/name.json', 'index': 1}],
+ [{'source': 'database/player/position.json', 'index': 0}]]</code></pre>
+</div>
+</div>
+<p>Now that I have my <code>word_location_sets</code> I can find all of the paths between each word using the <code>looping_file_search()</code> function that I previously defined.</p>
+<div id="1d6e0888" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add the first node to the end of the list to complete the loop</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co">#word_location_sets.append(word_location_sets[0])</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>sorted_word_location_lists.append(sorted_word_location_lists[<span class="dv">0</span>])</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># I will store all of the paths from one query word to the next</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># in the traversal_paths variable</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co"># traversal_paths = [(start, end, [start, middle, end])]</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co">#traversal_paths = []</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co">#for word_index, location_set in enumerate(word_location_sets):</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>edges <span class="op">=</span> []</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> query_index, this_word_locations <span class="kw">in</span> <span class="bu">enumerate</span>(sorted_word_location_lists):</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(query_index, this_word_locations)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Break the loop once I reach the end of the list of words</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> query_index <span class="op">&gt;=</span> <span class="bu">len</span>(sorted_word_location_lists) <span class="op">-</span> <span class="dv">1</span>:</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    locations_to_look_for <span class="op">=</span> sorted_word_location_lists[query_index <span class="op">+</span> <span class="dv">1</span>]</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    sources_to_look_for <span class="op">=</span> [location[<span class="st">"source"</span>] <span class="cf">for</span> location <span class="kw">in</span> locations_to_look_for]</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> this_location <span class="kw">in</span> this_word_locations:</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>        traversal_paths <span class="op">=</span> []         </span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Find a path to the next location</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>        path <span class="op">=</span> source_traversal_search(this_location[<span class="st">"source"</span>], sources_to_look_for, sources_traversed<span class="op">=</span>[])</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>        next_source <span class="op">=</span> path[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Path from </span><span class="sc">{</span>this_location[<span class="st">"source"</span>]<span class="sc">}</span><span class="ss"> to </span><span class="sc">{</span>next_source<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>path<span class="sc">}</span><span class="ss">."</span>)</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Now that I have found a looping path between two adjacent</span></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>        <span class="co"># words in my query I want to calculate the minimum index</span></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>        <span class="co"># distance between those words in those source locations.</span></span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>        this_source_locations <span class="op">=</span> [location <span class="cf">for</span> location <span class="kw">in</span> this_word_locations <span class="cf">if</span> location[<span class="st">"source"</span>] <span class="op">==</span> this_location[<span class="st">"source"</span>]]</span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>        next_source_locations <span class="op">=</span> [location <span class="cf">for</span> location <span class="kw">in</span> locations_to_look_for <span class="cf">if</span> location[<span class="st">"source"</span>] <span class="op">==</span> next_source]</span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>        this_location_indexes <span class="op">=</span> <span class="bu">set</span>(location[<span class="st">"index"</span>] <span class="cf">for</span> location <span class="kw">in</span> this_source_locations)</span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>        next_location_indexes <span class="op">=</span> <span class="bu">list</span>(<span class="bu">set</span>(location[<span class="st">"index"</span>] <span class="cf">for</span> location <span class="kw">in</span> next_source_locations))</span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="dv">0</span> <span class="kw">in</span> next_location_indexes:</span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Add every index of this word  as an index of the next</span></span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>            <span class="co"># word if it is a variable.</span></span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>            next_location_indexes.extend(this_location_indexes)</span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a>            next_location_indexes.remove(<span class="dv">0</span>)</span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"next_location_indexes: </span><span class="sc">{</span>next_location_indexes<span class="sc">}</span><span class="ss">"</span>)   </span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>        <span class="co"># First I need to find all of the locations that match</span></span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>        <span class="co"># this source from my </span></span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>        index_pairs <span class="op">=</span> <span class="bu">list</span>(itertools.product(this_location_indexes, next_location_indexes))</span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(index_pairs)</span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a>        index_products <span class="op">=</span> [{<span class="st">"start"</span>: index_pair[<span class="dv">0</span>], <span class="st">"end"</span>: index_pair[<span class="dv">1</span>], <span class="st">"score"</span>: index_pair[<span class="dv">0</span>] <span class="op">*</span> index_pair[<span class="dv">1</span>]} <span class="cf">for</span> index_pair <span class="kw">in</span> index_pairs]</span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>        index_products <span class="op">=</span> <span class="bu">sorted</span>(index_products, key<span class="op">=</span><span class="kw">lambda</span> index_product: index_product[<span class="st">"score"</span>])</span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a>        <span class="co"># If one of the locations contains a variable then the `index_score`</span></span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a>        <span class="co"># will be zero. Because this index is essentially a wildcard I can</span></span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a>        <span class="co"># make it match anything and so I will just reassign it a score of</span></span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a>        <span class="co"># one which is the lowest and most optimal score.   </span></span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a>        <span class="co"># I have deprecated this logic in favor of the above where I use a</span></span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>        <span class="co"># list comprehension to remove any products with zero scores.</span></span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a>        <span class="co">#if index_score == 0:</span></span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>        <span class="co">#    index_score = 1</span></span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a>        optimal_index <span class="op">=</span> index_products[<span class="dv">0</span>]</span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> optimal_index[<span class="st">"score"</span>] <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>            optimal_index[<span class="st">"score"</span>] <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Need to change the variable index to an index of an actual</span></span>
+<span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a>            <span class="co"># value. I do not know which word has an index of zero so I</span></span>
+<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a>            <span class="co"># will change both start and end indexes to the maximum.</span></span>
+<span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a>            optimal_index[<span class="st">"start"</span>] <span class="op">=</span> <span class="bu">max</span>([optimal_index[<span class="st">"start"</span>], optimal_index[<span class="st">"end"</span>]])</span>
+<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a>            optimal_index[<span class="st">"end"</span>] <span class="op">=</span> <span class="bu">max</span>([optimal_index[<span class="st">"start"</span>], optimal_index[<span class="st">"end"</span>]])</span>
+<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Once that I have found one of the files to look for I </span></span>
+<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a>        <span class="co"># need to then find the minimum index distance from the</span></span>
+<span id="cb18-70"><a href="#cb18-70" aria-hidden="true" tabindex="-1"></a>        <span class="co"># current source to the source that I was looking for.</span></span>
+<span id="cb18-71"><a href="#cb18-71" aria-hidden="true" tabindex="-1"></a>        path_dictionary <span class="op">=</span> {</span>
+<span id="cb18-72"><a href="#cb18-72" aria-hidden="true" tabindex="-1"></a>                           <span class="st">"start"</span>: {<span class="st">"source"</span>: path[<span class="dv">0</span>], <span class="st">"index"</span>: optimal_index[<span class="st">"start"</span>]},</span>
+<span id="cb18-73"><a href="#cb18-73" aria-hidden="true" tabindex="-1"></a>                           <span class="st">"end"</span>: {<span class="st">"source"</span>: path[<span class="op">-</span><span class="dv">1</span>], <span class="st">"index"</span>: optimal_index[<span class="st">"end"</span>]},</span>
+<span id="cb18-74"><a href="#cb18-74" aria-hidden="true" tabindex="-1"></a>                           <span class="st">"path"</span>: path,</span>
+<span id="cb18-75"><a href="#cb18-75" aria-hidden="true" tabindex="-1"></a>                           <span class="st">"steps"</span>: <span class="bu">len</span>(path),</span>
+<span id="cb18-76"><a href="#cb18-76" aria-hidden="true" tabindex="-1"></a>                           <span class="st">"index_score"</span>: optimal_index[<span class="st">"score"</span>]</span>
+<span id="cb18-77"><a href="#cb18-77" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb18-78"><a href="#cb18-78" aria-hidden="true" tabindex="-1"></a>        traversal_paths.append(path_dictionary)</span>
+<span id="cb18-79"><a href="#cb18-79" aria-hidden="true" tabindex="-1"></a>    edges.append(traversal_paths)</span>
+<span id="cb18-80"><a href="#cb18-80" aria-hidden="true" tabindex="-1"></a>edges</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>0 [{'source': 'database/player/name.json', 'index': 1}]
+Path from database/player/name.json to database/player/name.json: ['database/player/name.json'].
+next_location_indexes: [1]
+[(1, 1)]
+1 [{'source': 'database/player/name.json', 'index': 1}]
+Path from database/player/name.json to database/player/position.json: ['database/player/name.json', 'database/player/age.json', 'database/player/position.json'].
+next_location_indexes: [1]
+[(1, 1)]
+2 [{'source': 'database/player/position.json', 'index': 0}]
+Path from database/player/position.json to database/player/name.json: ['database/player/position.json', 'database/player/name.json'].
+next_location_indexes: [1]
+[(0, 1)]
+3 [{'source': 'database/player/name.json', 'index': 1}]</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="108">
+<pre><code>[[{'start': {'source': 'database/player/name.json', 'index': 1},
+   'end': {'source': 'database/player/name.json', 'index': 1},
+   'path': ['database/player/name.json'],
+   'steps': 1,
+   'index_score': 1}],
+ [{'start': {'source': 'database/player/name.json', 'index': 1},
+   'end': {'source': 'database/player/position.json', 'index': 1},
+   'path': ['database/player/name.json',
+    'database/player/age.json',
+    'database/player/position.json'],
+   'steps': 3,
+   'index_score': 1}],
+ [{'start': {'source': 'database/player/position.json', 'index': 1},
+   'end': {'source': 'database/player/name.json', 'index': 1},
+   'path': ['database/player/position.json', 'database/player/name.json'],
+   'steps': 2,
+   'index_score': 1}]]</code></pre>
+</div>
+</div>
+<div id="483fce34" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>path_index_score <span class="op">=</span> <span class="bu">sum</span>([path[<span class="st">"index_score"</span>] <span class="cf">for</span> path <span class="kw">in</span> traversal_paths])</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>path_index_score</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>path_steps_score <span class="op">=</span> <span class="bu">sum</span>([path[<span class="st">"steps"</span>] <span class="cf">for</span> path <span class="kw">in</span> traversal_paths])</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>path_steps_score</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>composite_score <span class="op">=</span> path_index_score <span class="op">*</span> path_steps_score</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>path_index_score<span class="sc">}</span><span class="ss"> * </span><span class="sc">{</span>path_steps_score<span class="sc">}</span><span class="ss"> = </span><span class="sc">{</span>composite_score<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1 * 2 = 2</code></pre>
+</div>
+</div>
+<p>Now that I have all of my possible edges I want to figure out how to align them into a loop so that I can return my query result.</p>
+<p>One of the ideas I have for doing this is creating a list of nodes. How do I do that?</p>
+<p><code>edges = [[{edge0-0}], [{edge1-0}], [{edge2-0}]]</code></p>
+<p>I have a lot of overlapping edges and I want to find the most efficient loop through those edges. I already know the order of my edges. In order to find the most efficient path I only need to sort them into ascending order so that the ones with the smallest scores are at the top.</p>
+<p>The optimal path from the first element to the second represents a local maximum rather than a global maximum. In order to find an optimal path through a potentially infinite solution space, I can try using a random walk method and keeping track of the difference I make at each step. I can store those differences in a fixed length array and every time I take a step I can check the shape of that distribution. My thinking is that once I have converged on a solution the differences will form a normal distribution. Every step I take, one new difference gets added to the front and the oldest gets dropped from the back. I can use the <code>pop</code> and <code>append</code> list methods to remove the oldest item from the front of the list and add a new one to the back of it.</p>
+<p>I can use a <code>while</code> loop to continue iterating through my edges until I reach a state where I want to break out of the loop.</p>
+<div id="391fa20e" class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> choose_an_edge(word_edges, chosen_edges <span class="op">=</span> [], word_index<span class="op">=</span><span class="dv">0</span>, discarded_edges<span class="op">=</span>[]):</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Always pick from the lowest scored edges</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> word_index <span class="op">&gt;=</span> <span class="bu">len</span>(word_edges):</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">#word_index = 0</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> chosen_edges    </span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Only edges that have the same start node as the previous end node</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># are eligible to be chosen. I can use a list comprehension to filter</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># out nodes that do not meet this criterion.</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> chosen_edges:</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>        previous_end <span class="op">=</span> chosen_edges[<span class="op">-</span><span class="dv">1</span>][<span class="st">"end"</span>]</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>        eligible_edges <span class="op">=</span> [edge <span class="cf">for</span> edge <span class="kw">in</span> word_edges[word_index] <span class="cf">if</span> edge[<span class="st">"start"</span>] <span class="op">==</span> previous_end]</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>        eligible_edges <span class="op">=</span> word_edges[word_index]</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    chosen_edge <span class="op">=</span> eligible_edges[<span class="dv">0</span>]</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>    chosen_edges.append(chosen_edge)</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>    word_index <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> choose_an_edge(word_edges, chosen_edges, word_index)</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(chosen_edges) <span class="op">&gt;</span> <span class="bu">len</span>(word_edges) <span class="kw">and</span> <span class="bu">len</span>(discarded_edges) <span class="op">&gt;=</span> <span class="dv">8</span>:</span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>        discarded_edge <span class="op">=</span> chosen_edges.pop(<span class="dv">0</span>)</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>        discarded_edges.append(discarded_edge)</span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>        <span class="co">#discarded_edge_scores.pop(0)</span></span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Calculate the cumulative score for the chosen edges where lower is better</span></span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>        cumulative_edge_score <span class="op">=</span> <span class="bu">sum</span>([edge[<span class="st">"index_score"</span>] <span class="cf">for</span> edge <span class="kw">in</span> chosen_edges])</span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(cumulative_edge_score)</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Test whether the discarded edge scores violate a normal distribution</span></span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a>        normal_statistics <span class="op">=</span> scipy.stats.normaltest([edge[<span class="st">"index_score"</span>] <span class="cf">for</span> edge <span class="kw">in</span> discarded_edges])</span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a>        <span class="co"># The normal test returns a tuple of the chi-squared statistic and associated p-value</span></span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> normal_statistics[<span class="dv">1</span>] <span class="op">&gt;</span> <span class="fl">0.05</span>:</span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> chosen_edges</span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Loop around to the beginning once this algorithm reaches</span></span>
+<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a>            <span class="co"># the end of the query words.</span></span>
+<span id="cb23-38"><a href="#cb23-38" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> word_index <span class="op">&gt;=</span> <span class="bu">len</span>(word_edges):</span>
+<span id="cb23-39"><a href="#cb23-39" aria-hidden="true" tabindex="-1"></a>                word_index <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb23-40"><a href="#cb23-40" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb23-41"><a href="#cb23-41" aria-hidden="true" tabindex="-1"></a>                word_index <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb23-42"><a href="#cb23-42" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> choose_an_edge(word_edges, chosen_edges, word_index, discarded_edges)</span>
+<span id="cb23-43"><a href="#cb23-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb23-44"><a href="#cb23-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> choose_an_edge(word_edges, chosen_edges, word_index, discarded_edges)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>I think that I am trying to do too much at once here and I am confusing myself.</p>
+<div id="00f083f7" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>result_edges <span class="op">=</span> choose_an_edge(word_edges<span class="op">=</span>edges, chosen_edges<span class="op">=</span>[], word_index<span class="op">=</span><span class="dv">0</span>, discarded_edges<span class="op">=</span>[])</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>result_edges</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="111">
+<pre><code>[{'start': {'source': 'database/player/name.json', 'index': 1},
+  'end': {'source': 'database/player/name.json', 'index': 1},
+  'path': ['database/player/name.json'],
+  'steps': 1,
+  'index_score': 1},
+ {'start': {'source': 'database/player/name.json', 'index': 1},
+  'end': {'source': 'database/player/position.json', 'index': 1},
+  'path': ['database/player/name.json',
+   'database/player/age.json',
+   'database/player/position.json'],
+  'steps': 3,
+  'index_score': 1},
+ {'start': {'source': 'database/player/position.json', 'index': 1},
+  'end': {'source': 'database/player/name.json', 'index': 1},
+  'path': ['database/player/position.json', 'database/player/name.json'],
+  'steps': 2,
+  'index_score': 1}]</code></pre>
+</div>
+</div>
+<p>Now that I have a result I need to get the values for these edges.</p>
+<p>Instead of looking forward, project myself forward and look backwards. Now I am going to look up the values for these edges and return them.</p>
+<p>The actual data in my database is only stored in the <code>index.json</code> file. All of the other files store only metadata so in order to constitute an actual response I need to do trace back through the ancestors of all these ideas to get the values that compose them. I can write a recursive function to do this for each edge.</p>
+<p>I do not need to use a recursive search because all of my values are stored in the same <code>index.json</code> file. I just need to pull all of the indices specified by each edge dictionary.</p>
+<div id="dd5b2eaa" class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">#def constitute_edge_value(edge):</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co">#    </span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co">#    if isinstance(edge, dict):</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co">#        with open(edge["source"], 'r') as file_handle:</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co">#            data = json.load(file_handle)</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="co">#            value = data[edge["index"]]</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="co">#        return constitutue_edge_value(value)</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="co">#    else:</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="co">#        return edge</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="5cc31c90" class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> retrieve_values(source, indexes):</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(source, <span class="st">'r'</span>) <span class="im">as</span> file_handle:</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>        data <span class="op">=</span> json.load(file_handle)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    values <span class="op">=</span> [data[index][<span class="st">"value"</span>] <span class="cf">for</span> index <span class="kw">in</span> indexes]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="0dac7298" class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(result_edges)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[{'start': {'source': 'database/player/name.json', 'index': 1}, 'end': {'source': 'database/player/name.json', 'index': 1}, 'path': ['database/player/name.json'], 'steps': 1, 'index_score': 1}, {'start': {'source': 'database/player/name.json', 'index': 1}, 'end': {'source': 'database/player/position.json', 'index': 1}, 'path': ['database/player/name.json', 'database/player/age.json', 'database/player/position.json'], 'steps': 3, 'index_score': 1}, {'start': {'source': 'database/player/position.json', 'index': 1}, 'end': {'source': 'database/player/name.json', 'index': 1}, 'path': ['database/player/position.json', 'database/player/name.json'], 'steps': 2, 'index_score': 1}]</code></pre>
+</div>
+</div>
+<div id="2f76ebc9" class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> []</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> edge <span class="kw">in</span> result_edges:</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    start_node <span class="op">=</span> edge[<span class="st">"start"</span>]</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">#values = retrieve_values(start_node["source"], start_node["index"])</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">#results.extend(values)</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(results)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[]</code></pre>
+</div>
+</div>
+<p>Now that I have defined all of the edges in my graph loop I want to assign scores to them in order to find the most accurate path as well as the shortest path. And then using those metrics I can also define the most efficient path. I can use the <code>paths</code> property in the <code>traversal_paths</code> dictionary to do that in order to calculate how many steps I have to take to traverse that path. I can add this as a property of the path. This information is useful because it indicates how many read operations the computer had to do in order to get the result and read operations are relatively expensive.</p>
+<p>Note: Graphs can be thought of in terms of “vertices” and “edges” or “nodes” and “relationships”. Because I have connected this data arbitrarily I am prefering the term “edge(s)” here to describe the connections between query words.</p>
+<p>I think this could be a good opportunity to use a recursive function because what I am envisioning is that each set of locations associated with a word is like a window into semantic space and what I want to do is to try to line up those windows so that the gaps between windows are as small as possible. For each word I want to try to align it with the previous word and I can keep looping through words until I converge on an optimal solution.</p>
+<p>A recursive function is one that can call itself until it reaches a predefined logical threshold upon which it will return all of the results it has generated from completing a recursive loop of calling other instances of itself. Spatially I can think of it as a sort of reverse nesting doll structure where I start with one doll that can generate many more until reaching a goal and then returning the result from that entire lineage of function calls.</p>
+<p>I am defining a function called <code>word_window_fitting</code> in order to try to find an optimal solution through all of the words in my query statement. I am going to pass the function a w</p>
+<div id="1e5881b2" class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">#def word_window_fitting(word_index=0, locations_lists, previous_location_index=None):</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co">#    if previous_location_index:</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If the query location is not zero then I can directly return the word. If the query location is zero that indicates that it is a variable and I need to return the appropriate value.</p>
+<p>For the sake of finding a loop I can duplicate the first element in <code>query_locations</code> so that it is also the last element. In the case where a location has a zero index indicating that the word is a variable or category rather than a value, I can use the indexes of the surrounding locations to infer the index of the correct value. I can use the Python <a href="https://docs.python.org/3/library/functions.html#enumerate">enumerate</a> function to keep track of which location I am looking at so that I can use the enumerated index to get the neighboring locations.</p>
+<div id="81167bfc" class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>first_word <span class="op">=</span> query_word_location_lists[<span class="dv">0</span>]</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>last_word <span class="op">=</span> query_word_location_lists[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add the first word to the end of the list and the last word to the beginning so that it loops in both directions.</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>query_locations <span class="op">=</span> query_word_location_lists</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>query_locations.append(first_word)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>query_locations.insert(<span class="dv">0</span>, last_word)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>query_locations</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="117">
+<pre><code>[[{'source': 'database/player/position.json', 'index': 0}],
+ [{'source': 'database/player/name.json', 'index': 1}],
+ [{'source': 'database/player/name.json', 'index': 1}],
+ [{'source': 'database/player/position.json', 'index': 0}],
+ [{'source': 'database/player/name.json', 'index': 1}]]</code></pre>
+</div>
+</div>
+<p>Every time I replace a variable with a value I want to create a copy of the <code>query_locations</code> with an updated index for that word that points to a value rather than a category.</p>
+<div id="365fa737" class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> []</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> index, location <span class="kw">in</span> <span class="bu">enumerate</span>(query_locations):</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> location <span class="op">!=</span> <span class="dv">0</span>:</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">next</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>        lookup_indexes <span class="op">=</span> [query_locations[index <span class="op">-</span> <span class="dv">1</span>], query_locations[index <span class="op">-</span><span class="dv">2</span>]]</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> lookup_index <span class="kw">in</span> lookup_indexes:</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>            result_locations <span class="op">=</span> query_locations</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>            result_locations[index] <span class="op">=</span> (lookup_index, query_locations[index][<span class="dv">1</span>])</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>            results.append(result_locations)</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>results</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="118">
+<pre><code>[]</code></pre>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/billingross\.github\.io\/circuity\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
