@@ -1,0 +1,78 @@
+---
+title: "Player database: importing and exporting data"
+author: "Paul Billing-Ross"
+date: "2025-09-18"
+categories: [database, football, players]
+---
+# Introduction
+Now that I have validated the basic search mechanism I want to establish a method for programmatically importing and exporting data to and from my database. Because I find loops to be an excellent validation method I want to make sure that I can import and export and then import the same data while retaining complete data fidelity.
+
+My database is stored as [JSON](https://en.wikipedia.org/wiki/JSON) documents and while they are human readable they are not the easiest documents to manipulate manually. Comma separated values or "CSV" files are plain text and human readable and structured as tables which are more intuitive to look at. People who have used spreadsheets are probably already familiar with them.
+
+I will created methods to import comma separated values files into the database and also to export the database as a set of comma separated files. Since the database files are stored in JSON, this effectively means that I will be convertint comma separated values files into JSON files.
+
+I think I am going to start by implementing the export function because if I figure out how I want to export the data from my database then I can figure out what I expect the comma separated files to look like when I import them.
+
+A challenge with exporting my database is that all of my files except for the index store metadata and only the index stores data. I will need to map the metadata to the data before I can export them.
+
+## How do I want to structure my comma separated values files?
+I currently store all of my database files in a `database` directory. At the root of this directory is an `index.json` file which contains all of the words in my database as well as a series of directories which represent all of the loops in my database. Currently I only have one loop which I am calling `player` because it contains football player references.
+
+```
+# Example directory and file structure of my database
+database/
+database/index.json
+database/player
+database/player/first-name.json
+database/player/last-name.json
+database/player/position.json
+database/player/age.json
+```
+
+I am thinking that I want to create a single comma separated values file for each loop. Here is an example of how I could represent the database in a comma separated values table named `player`.
+
+| first-name | last-name | position | age |
+| --- | --- | --- | --- |
+| Justin | Blackmon | free safety | 27 |
+| Jarrian | Jones | cornerback | 23 |
+
+## Workflow
+- [ ] Load the database files into my Python environment
+- [ ] Map the metadata values to actual values
+- [ ] Export them as comma separated values files
+
+
+# Methods
+
+## Load dependencies
+```{python}
+#| code-fold: true
+
+import json
+import scipy
+import itertools
+```
+
+## Load the database
+### Define database structure using a dictionary
+```{python}
+database_files = [
+    "database/index.json",
+    "database/player/age.json",
+    "database/player/first-name.json",
+    "database/player/last-name.json",
+    "database/player/position.json"
+]
+```
+
+### Convert the index from a list to a dictionary
+I natively store the index as a list of dictionaries. For the sake of reverse lookup this is useful and for the sake of lookup it is not. Here I convert the index from a list to a dictionary for the sake of lookup.
+```{python}
+with open("database/index.json") as file_handle:
+    index_list = json.load(file_handle)
+index_dictionary = {item["value"]: item["references"] for item in index_list}
+index_dictionary
+```
+And now I have my index stored as a dictionary and a list for lookup and reverse lookup operations, respectively.
+
+## 
