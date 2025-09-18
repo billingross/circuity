@@ -22,11 +22,12 @@ And then I decided that I was trying to do too much too fast and I need to focus
 ## Workflow steps
 - [x] Load dependencies
 - [x] Load the database index as a dictionary and a list
+- [x] Write a function to find a path from one file to any of a list of files
 - [x] Split the query phrase into a list of words
 - [x] Get a list of locations for every word in the query phrase
 - [ ] Sort each word location list (not sure if this is necessary)
+- [ ] Find all of the looping paths between query words
 - [ ] Create a unique list of files where every word is found
-- [ ] Write a function to find a path from one file to any of a list of files
 
 # Methods
 The first use-case I am envisioning is searching for the position that Justin Blackmon plays using the phrase "Justin Blackmon position". I am organizing this as a columnar database so that all of the values of a particular category such as "position" are all stored in the same file. Where do I start? First I need to understand all of the files in my database. I can organize them all into a directory named "database".
@@ -57,7 +58,8 @@ def file_traversal_search(current_file_path, files_to_look_for, files_traversed=
     """ 
 
     # Add the current file to the list of files traversed
-    files_traversed.append(source_path)    
+    files_traversed.append(current_file_path)
+    print(current_file_path, files_to_look_for)    
 
     # Check if the current file is the one the function is looking for. If so, then
     # the function has completed its job and will return the list of files
@@ -68,13 +70,13 @@ def file_traversal_search(current_file_path, files_to_look_for, files_traversed=
     with open(current_file_path, 'r') as file_handle:
         file_data = json.load(file_handle)
     # The path to the next file in the database is always stored as the last element.
-    next_file = file_data[-1]
+    next_file_path = file_data[-1]
  
-    if next_file in files_to_look_for:
-        files_traversed.append(next_file)
+    if next_file_path in files_to_look_for:
+        files_traversed.append(next_file_path)
         return files_traversed
     else:
-        return file_traversal_search(current_file_path, files_to_look_for, files_traversed)
+        return file_traversal_search(next_file_path, files_to_look_for, files_traversed)
 ```
 
 Test the `file_traversal_search()` function.
@@ -82,8 +84,28 @@ Test the `file_traversal_search()` function.
 first_file = 'database/player/age.json'
 last_file = 'database/player/name.json'
 
-result = file_traversal_search(first_file, last_file)
+result = file_traversal_search(
+                               current_file_path = first_file, 
+                               files_to_look_for = [last_file],
+                               files_traversed = [])
 result
+```
+
+```{python}
+def retrieve_values(metadata_file, indexes):
+    """Retrieve the values from the specified indexes of a database metadata file.
+    
+    Args:
+        metadata_file (str): The specified database file to retrieve the value from.
+        indexes (list): The indices of all the values to retrieve from the file.
+    Returns:
+        (list): The values from the metadata file.        
+    """
+
+    with open(source, 'r') as file_handle:
+        data = json.load(file_handle)
+    values = [data[index]["value"] for index in indexes]
+    return values
 ```
 
 ## Load the database
@@ -118,66 +140,37 @@ query_words
 ```{python}
 query_word_location_lists = []
 for word in query_words:
+    word_locations = index_dictionary.get(word)
     # Using the get method here will avoid errors in case any words are not in my dictionary
-    query_word_location_lists.append(index.get(word))
+    query_word_location_lists.append(index_dictionary.get(word))
 query_word_location_lists
 ```
 
-## Sort each location list
-For each word in my query I have a list of locations where that word is located. One of the ways that I could optimize for searching is by trying to minimize the difference between indexes of neighboring word locations. I could sort each list by the index value which is the second one in each tuple. Something like...
-```{python}
-sorted_word_location_lists = []
-for query_index, word_location_list in enumerate(query_word_location_lists):
-    # Sort the word location list by the index of the file where the word is located. 
-    sorted_word_location_list = sorted(word_location_list, key=lambda location: location["index"])
-    sorted_word_location_lists.append(sorted_word_location_list)
-sorted_word_location_lists
-```
-
-I want to find a path through each word in my `sorted_word_location_lists`. I think a way that I can do that is by getting a unique list of files where each word is found and then walk from each of those files until I find a file that includes the next word or I find the file I started from because my files are linked to one another in a looping structure.
-
-I can write a separate function to perform the looping search.
-
-And now I have a data structure and a function for performing looping searches! **Hooray!**
-
-I changed my mind and no longer think that creating a separate `word_location_sets` list is useful. It was helpful in allowing me to focus during development and now that I have established the basic mechanism I think that it is most useful to keep the file names and indexes together in the `sorted_word_location_lists` variable.
-```{python}
-#word_location_sets = []
-#for word_locations in sorted_word_location_lists:
-    # Create a list of files where this word is located. By casting
-    # this list as a set I can ensure that I do not have any 
-    # duplicate locations.
-#    word_files = set([location[0] for location in word_locations])
-#    word_location_sets.append(word_files)
-#word_location_sets        
-```    
-
-At the same time that I identify a valid path from the start word to the end word I also want to do all the "edge" math like calculating the difference between the indexes of the start and the end word or node. 
-```{python}
-sorted_word_location_lists
-```
-
+## Find all of the looping paths between query words
 I can find all of the paths between each word using the `looping_file_search()` function that I previously defined.
 ```{python}
+# This list is not actually sorted yet
+sorted_word_location_lists = query_word_location_lists
+
 # Add the first node to the end of the list to complete the loop
 sorted_word_location_lists.append(sorted_word_location_lists[0])
 
 edges = []
-for query_index, this_word_locations in enumerate(sorted_word_location_lists):
-    print(query_index, this_word_locations)
+for query_word_index, this_word_locations in enumerate(sorted_word_location_lists):
+    #print(query_word_index, this_word_locations)
     
     # Break the loop once I reach the end of the list of words
-    if query_index >= len(sorted_word_location_lists) - 1:
+    if query_word_index >= len(sorted_word_location_lists) - 1:
         break
-    locations_to_look_for = sorted_word_location_lists[query_index + 1]
-    sources_to_look_for = [location["source"] for location in locations_to_look_for]
+    locations_to_look_for = sorted_word_location_lists[query_word_index + 1]
+    files_to_look_for = [location["source"] for location in locations_to_look_for]
     for this_location in this_word_locations:
         traversal_paths = []         
 
         # Find a path to the next location
-        path = source_traversal_search(this_location["source"], sources_to_look_for, sources_traversed=[])
+        path = file_traversal_search(this_location["source"], files_to_look_for, files_traversed=[])
         next_source = path[-1]
-        print(f"Path from {this_location["source"]} to {next_source}: {path}.")
+        #print(f"Path from {this_location["source"]} to {next_source}: {path}.")
 
         # Now that I have found a looping path between two adjacent
         # words in my query I want to calculate the minimum index
@@ -193,12 +186,12 @@ for query_index, this_word_locations in enumerate(sorted_word_location_lists):
             # word if it is a variable.
             next_location_indexes.extend(this_location_indexes)
             next_location_indexes.remove(0)
-        print(f"next_location_indexes: {next_location_indexes}")   
+        #print(f"next_location_indexes: {next_location_indexes}")   
  
         # First I need to find all of the locations that match
         # this source from my 
         index_pairs = list(itertools.product(this_location_indexes, next_location_indexes))
-        print(index_pairs)
+        #print(index_pairs)
         index_products = [{"start": index_pair[0], "end": index_pair[1], "score": index_pair[0] * index_pair[1]} for index_pair in index_pairs]
         
         index_products = sorted(index_products, key=lambda index_product: index_product["score"])
@@ -228,146 +221,42 @@ for query_index, this_word_locations in enumerate(sorted_word_location_lists):
     edges.append(traversal_paths)
 edges
 ```
+Now I have an `edges` variable which contains a list of lists of all the files required to traverse from each word in my query statement to the next word and then back to the original word - creating a database loop.
 
+Each edge in `edges` is really a path of edges. Within each of those paths I only need the first element which corresponds to a query word. And within the edge path I only need the `start` value which points to the query word. All of the other elements in the list are only valuable for the sake of validating the loop path.
+
+Now I am going to extract those `start` node references so that I can get their corresponding values and return a query response.
 ```{python}
-path_index_score = sum([path["index_score"] for path in traversal_paths])
-path_index_score
-path_steps_score = sum([path["steps"] for path in traversal_paths])
-path_steps_score
-composite_score = path_index_score * path_steps_score
-print(f"{path_index_score} * {path_steps_score} = {composite_score}")
+response_node_references = []
+for edge_path in edges:
+    start_node = edge_path[0]["start"]
+    response_node_references.append(start_node)
+response_node_references
 ```
 
-Now that I have all of my possible edges I want to figure out how to align them into a loop so that I can return my query result.
-
-One of the ideas I have for doing this is creating a list of nodes. How do I do that?
-
-`edges = [[{edge0-0}], [{edge1-0}], [{edge2-0}]]`
-
-I have a lot of overlapping edges and I want to find the most efficient loop through those edges. I already know the order of my edges. In order to find the most efficient path I only need to sort them into ascending order so that the ones with the smallest scores are at the top.
-
-The optimal path from the first element to the second represents a local maximum rather than a global maximum. In order to find an optimal path through a potentially infinite solution space, I can try using a random walk method and keeping track of the difference I make at each step. I can store those differences in a fixed length array and every time I take a step I can check the shape of that distribution. My thinking is that once I have converged on a solution the differences will form a normal distribution. Every step I take, one new difference gets added to the front and the oldest gets dropped from the back. I can use the `pop` and `append` list methods to remove the oldest item from the front of the list and add a new one to the back of it.
-
-I can use a `while` loop to continue iterating through my edges until I reach a state where I want to break out of the loop. 
-
+Now that I know where the metadata for each response node is located I want to get the metadata values from the source file and index defined in each `start_node`. I defined a `retrieve_values()` function to do so.
 ```{python}
-def choose_an_edge(word_edges, chosen_edges = [], word_index=0, discarded_edges=[]):
-    # Always pick from the lowest scored edges
-    if word_index >= len(word_edges):
-        #word_index = 0
-        return chosen_edges    
+metadata_values = []
+for reference in response_node_references:
+    file = reference["source"]
+    index = reference["index"]
+    
+    with open(file, 'r') as file_handle:
+        file_list = json.load(file_handle)
+    metadata_value = file_list[index]
+    metadata_values.append(metadata_value)
+metadata_values
+```
 
-    # Only edges that have the same start node as the previous end node
-    # are eligible to be chosen. I can use a list comprehension to filter
-    # out nodes that do not meet this criterion.
-    if chosen_edges:
-        previous_end = chosen_edges[-1]["end"]
-        eligible_edges = [edge for edge in word_edges[word_index] if edge["start"] == previous_end]
+Now that I have the metadata values of my query response, I can get the corresponding data values from the `index.json` file.
+```{python}
+response_values = []
+for metadata_value in metadata_values:
+    print(metadata_value)
+    if isinstance(metadata_value, dict):
+        response_value = [index_list[index]['value'] for index in metadata_value['indexes']]
+        response_values.extend(response_value)
     else:
-        eligible_edges = word_edges[word_index]
-
-    chosen_edge = eligible_edges[0]
-    chosen_edges.append(chosen_edge)
-    word_index += 1
-    return choose_an_edge(word_edges, chosen_edges, word_index)
-
-    if len(chosen_edges) > len(word_edges) and len(discarded_edges) >= 8:
-        discarded_edge = chosen_edges.pop(0)
-        discarded_edges.append(discarded_edge)
-        #discarded_edge_scores.pop(0)
-
-        # Calculate the cumulative score for the chosen edges where lower is better
-        cumulative_edge_score = sum([edge["index_score"] for edge in chosen_edges])
-        print(cumulative_edge_score)
-        
-        # Test whether the discarded edge scores violate a normal distribution
-        normal_statistics = scipy.stats.normaltest([edge["index_score"] for edge in discarded_edges])
-        # The normal test returns a tuple of the chi-squared statistic and associated p-value
-        if normal_statistics[1] > 0.05:
-            return chosen_edges
-        else:
-            # Loop around to the beginning once this algorithm reaches
-            # the end of the query words.
-            if word_index >= len(word_edges):
-                word_index = 0
-            else:
-                word_index += 1
-            return choose_an_edge(word_edges, chosen_edges, word_index, discarded_edges)
-    else:
-        return choose_an_edge(word_edges, chosen_edges, word_index, discarded_edges)
+        response_values.append(metadata_value)
+response_values
 ```
-I think that I am trying to do too much at once here and I am confusing myself.
-
-```{python}
-result_edges = choose_an_edge(word_edges=edges, chosen_edges=[], word_index=0, discarded_edges=[])
-result_edges
-```
-Now that I have a result I need to get the values for these edges.
-
-Instead of looking forward, project myself forward and look backwards. Now I am going to look up the values for these edges and return them.
-
-The actual data in my database is only stored in the `index.json` file. All of the other files store only metadata so in order to constitute an actual response I need to do trace back through the ancestors of all these ideas to get the values that compose them. I can write a recursive function to do this for each edge.
-
-I do not need to use a recursive search because all of my values are stored in the same `index.json` file. I just need to pull all of the indices specified by each edge dictionary.
-
-```{python}
-def retrieve_values(source, indexes):
-    with open(source, 'r') as file_handle:
-        data = json.load(file_handle)
-    values = [data[index]["value"] for index in indexes]
-```
-
-```{python}
-print(result_edges)
-```
-
-```{python}
-results = []
-for edge in result_edges:
-    start_node = edge["start"]
-print(results)
-```
-
-Now that I have defined all of the edges in my graph loop I want to assign scores to them in order to find the most accurate path as well as the shortest path. And then using those metrics I can also define the most efficient path. I can use the `paths` property in the `traversal_paths` dictionary to do that in order to calculate how many steps I have to take to traverse that path. I can add this as a property of the path. This information is useful because it indicates how many read operations the computer had to do in order to get the result and read operations are relatively expensive.
-
-Note: Graphs can be thought of in terms of "vertices" and "edges" or "nodes" and "relationships". Because I have connected this data arbitrarily I am prefering the term "edge(s)" here to describe the connections between query words.
-
-I think this could be a good opportunity to use a recursive function because what I am envisioning is that each set of locations associated with a word is like a window into semantic space and what I want to do is to try to line up those windows so that the gaps between windows are as small as possible. For each word I want to try to align it with the previous word and I can keep looping through words until I converge on an optimal solution.
-
-A recursive function is one that can call itself until it reaches a predefined logical threshold upon which it will return all of the results it has generated from completing a recursive loop of calling other instances of itself. Spatially I can think of it as a sort of reverse nesting doll structure where I start with one doll that can generate many more until reaching a goal and then returning the result from that entire lineage of function calls.
-
-I am defining a function called `word_window_fitting` in order to try to find an optimal solution through all of the words in my query statement. I am going to pass the function a w
-```{python}
-#def word_window_fitting(word_index=0, locations_lists, previous_location_index=None):
-#    if previous_location_index:
-```        
-
-If the query location is not zero then I can directly return the word. If the query location is zero that indicates that it is a variable and I need to return the appropriate value.
-
-For the sake of finding a loop I can duplicate the first element in `query_locations` so that it is also the last element. In the case where a location has a zero index indicating that the word is a variable or category rather than a value, I can use the indexes of the surrounding locations to infer the index of the correct value. I can use the Python [enumerate](https://docs.python.org/3/library/functions.html#enumerate) function to keep track of which location I am looking at so that I can use the enumerated index to get the neighboring locations.
-
-```{python}
-first_word = query_word_location_lists[0]
-last_word = query_word_location_lists[-1]
-
-# Add the first word to the end of the list and the last word to the beginning so that it loops in both directions.
-query_locations = query_word_location_lists
-query_locations.append(first_word)
-query_locations.insert(0, last_word)
-query_locations
-``` 
-
-Every time I replace a variable with a value I want to create a copy of the `query_locations` with an updated index for that word that points to a value rather than a category.
-```{python}
-results = []
-for index, location in enumerate(query_locations):
-    if location != 0:
-        next
-    else:
-        lookup_indexes = [query_locations[index - 1], query_locations[index -2]]
-        for lookup_index in lookup_indexes:
-            result_locations = query_locations
-            result_locations[index] = (lookup_index, query_locations[index][1])
-            results.append(result_locations)
-results
-``` 
