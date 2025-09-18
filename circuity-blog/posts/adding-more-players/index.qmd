@@ -1,0 +1,293 @@
+---
+title: "Player database: adding more players"
+author: "Paul Billing-Ross"
+date: "2025-09-18"
+categories: [database]
+---
+# Introduction
+Yesterday I established the basic looping structure that I imagine my database following. I tested it using a single basic use case. Today I want to try adding additional players so that I can do further validation.
+
+I am going to return to the FTN Football Almanac and try adding additional Jacksonville Jaguars players from the 2024-2025 season to my database.
+
+To make it easier for me to test additional queries I can convert the code I generated into functions so that they are more easily callable.
+## Workflow steps
+- [ ] Manually add more players to the database
+- [ ] Convert database logic into functions
+- [ ] Validate my basic looping mechanism using additional queries
+
+# Methods
+
+## Load dependencies
+```{python}
+import json
+import scipy
+import itertools
+```
+
+## Define functions
+```{python}
+def file_traversal_search(current_file_path, files_to_look_for, files_traversed=[]):
+    """Find a path from the current file to one of the ones I am looking for.
+
+    Args:
+        current_file_path (str): The path of the current file.
+        files_to_look_for (list): A list of eligible destination files.
+        files_traversed (list): A list of the files that have already been traversed during search.
+
+    Returns:
+        files_traversed (list): Once a destination file has been found this function will return the list of files traversed.
+    """ 
+
+    # Add the current file to the list of files traversed
+    files_traversed.append(current_file_path)
+    print(current_file_path, files_to_look_for)    
+
+    # Check if the current file is the one the function is looking for. If so, then
+    # the function has completed its job and will return the list of files
+    # that it traversed to find the file or files it was looking for.
+    if current_file_path in files_to_look_for:
+        return files_traversed
+
+    with open(current_file_path, 'r') as file_handle:
+        file_data = json.load(file_handle)
+    # The path to the next file in the database is always stored as the last element.
+    next_file_path = file_data[-1]
+ 
+    if next_file_path in files_to_look_for:
+        files_traversed.append(next_file_path)
+        return files_traversed
+    else:
+        return file_traversal_search(next_file_path, files_to_look_for, files_traversed)
+```
+
+Test the `file_traversal_search()` function.
+```{python}
+first_file = 'database/player/age.json'
+last_file = 'database/player/first-name.json'
+
+result = file_traversal_search(
+                               current_file_path = first_file, 
+                               files_to_look_for = [last_file],
+                               files_traversed = [])
+result
+```
+
+```{python}
+def retrieve_values(metadata_file, indexes):
+    """Retrieve the values from the specified indexes of a database metadata file.
+    
+    Args:
+        metadata_file (str): The specified database file to retrieve the value from.
+        indexes (list): The indices of all the values to retrieve from the file.
+    Returns:
+        (list): The values from the metadata file.        
+    """
+
+    with open(source, 'r') as file_handle:
+        data = json.load(file_handle)
+    values = [data[index]["value"] for index in indexes]
+    return values
+```
+
+```{python}
+def get_query_locations(query, index_dictionary):
+    query_words = query.split()
+
+    query_word_location_lists = []
+    for word in query_words:
+        word_locations = index_dictionary.get(word)
+        # Using the get method here will avoid errors in case any words are not in my dictionary
+        query_word_location_lists.append(index_dictionary.get(word))
+    return query_word_location_lists
+```
+
+```{python}
+def find_query_loop(query_word_location_lists):
+    # Add the first node to the end of the list to complete the loop
+    query_word_location_lists.append(query_word_location_lists[0])
+
+    edges = []
+    for query_word_index, this_word_locations in enumerate(query_word_location_lists):
+    
+        # Break the loop once I reach the end of the list of words
+        if query_word_index >= len(query_word_location_lists) - 1:
+            break
+        locations_to_look_for = query_word_location_lists[query_word_index + 1]
+        files_to_look_for = [location["source"] for location in locations_to_look_for]
+        for this_location in this_word_locations:
+            traversal_paths = []         
+
+            # Find a path to the next location
+            path = file_traversal_search(this_location["source"], files_to_look_for, files_traversed=[])
+            next_source = path[-1]
+
+            # Now that I have found a looping path between two adjacent
+            # words in my query I want to calculate the minimum index
+            # distance between those words in those source locations.
+            this_source_locations = [location for location in this_word_locations if location["source"] == this_location["source"]]
+            next_source_locations = [location for location in locations_to_look_for if location["source"] == next_source]
+
+            this_location_indexes = set(location["index"] for location in this_source_locations)
+            next_location_indexes = list(set(location["index"] for location in next_source_locations))
+
+            if 0 in next_location_indexes:
+                # Add every index of this word  as an index of the next
+                # word if it is a variable.
+                next_location_indexes.extend(this_location_indexes)
+                next_location_indexes.remove(0)
+ 
+            # First I need to find all of the locations that match
+            # this source from my 
+            index_pairs = list(itertools.product(this_location_indexes, next_location_indexes))
+            index_products = [{"start": index_pair[0], "end": index_pair[1], "score": index_pair[0] * index_pair[1]} for index_pair in index_pairs]
+        
+            index_products = sorted(index_products, key=lambda index_product: index_product["score"])
+
+            # I have deprecated this logic in favor of the above where I use a
+            # list comprehension to remove any products with zero scores.
+            optimal_index = index_products[0]
+            if optimal_index["score"] == 0:
+                optimal_index["score"] = 1
+                # I need to change the variable index to an index of an actual
+                # value. I do not know which word has an index of zero so I
+                # will change both start and end indexes to the maximum.
+                optimal_index["start"] = max([optimal_index["start"], optimal_index["end"]])
+                optimal_index["end"] = max([optimal_index["start"], optimal_index["end"]])
+
+            # Once I have found one of the files to look for I 
+            # need to then find the minimum index distance from the
+            # current source to the source that I was looking for.
+            path_dictionary = {
+                               "start": {"source": path[0], "index": optimal_index["start"]},
+                               "end": {"source": path[-1], "index": optimal_index["end"]},
+                               "path": path,
+                               "steps": len(path),
+                               "index_score": optimal_index["score"]
+            }
+            traversal_paths.append(path_dictionary)
+        edges.append(traversal_paths)
+    return edges
+```
+
+```{python}
+def get_response_nodes(edges):
+    response_node_references = []
+    for edge_path in edges:
+        start_node = edge_path[0]["start"]
+        response_node_references.append(start_node)
+    return response_node_references
+```
+
+```{python}
+def lookup_metadata(response_node_references):
+    metadata_values = []
+    for reference in response_node_references:
+        file = reference["source"]
+        index = reference["index"]
+    
+        with open(file, 'r') as file_handle:
+            file_list = json.load(file_handle)
+        metadata_value = file_list[index]
+        metadata_values.append(metadata_value)
+    return metadata_values
+```
+
+```{python}
+def lookup_actual_values(metadata_values):
+    if not metadata_values:
+        return None    
+
+    response_values = []
+    for metadata_value in metadata_values:
+        print(metadata_value)
+        if isinstance(metadata_value, dict):
+            response_value = [index_list[index]['value'] for index in metadata_value['indexes']]
+            response_values.extend(response_value)
+        else:
+            response_values.append(metadata_value)
+    return response_values
+```
+
+```{python}
+def format_response(response_values):
+    if response_values:
+        response_strings = [str(value) for value in response_values]
+        return " ".join(response_strings)
+    else:
+        return None
+```
+
+## Load the database
+### Define database structure using a dictionary
+```{python}
+database_files = [
+    "database/index.json",
+    "database/player/age.json",
+    "database/player/first-name.json",
+    "database/player/last-name.json",
+    "database/player/position.json"
+]
+```
+
+### Convert the index from a list to a dictionary
+I natively store the index as a list of dictionaries. For the sake of reverse lookup this is useful and for the sake of lookup it is not. Here I convert the index from a list to a dictionary for the sake of lookup.
+```{python}
+with open("database/index.json") as file_handle:
+    index_list = json.load(file_handle)
+index_dictionary = {item["value"]: item["references"] for item in index_list}
+index_dictionary
+```
+And now I have my index stored as a dictionary and a list for lookup and reverse lookup operations, respectively.
+
+## Validate queries
+### Query Justin Blackmon position
+```{python}
+query = "Justin Blackmon position"
+print(f"Query: {query}.")
+
+query_location_lists = get_query_locations(query, index_dictionary) 
+edges = find_query_loop(query_location_lists)
+print(f"Edges: {edges}.")
+response_node_references = get_response_nodes(edges) 
+print(f"Response nodes: {response_node_references}.")
+response_metadata_values = lookup_metadata(response_node_references)
+print(f"Response metadata: {response_metadata_values}.")
+response_values = lookup_actual_values(response_metadata_values)
+response = format_response(response_values)
+print(f"Response: {response}.")
+```
+
+### Query Justin Blackmon age
+```{python}
+query = "Justin Blackmon age"
+print(f"Query: {query}.")
+
+query_location_lists = get_query_locations(query, index_dictionary) 
+edges = find_query_loop(query_location_lists)
+print(f"Edges: {edges}.")
+response_node_references = get_response_nodes(edges) 
+print(f"Response nodes: {response_node_references}.")
+response_metadata_values = lookup_metadata(response_node_references)
+print(f"Response metadata: {response_metadata_values}.")
+response_values = lookup_actual_values(response_metadata_values)
+response = format_response(response_values)
+print(f"Response: {response}.")
+```
+
+
+### Query Jarrian Jones position
+```{python}
+query = "Jarrian Jones position"
+print(f"Query: {query}.")
+
+query_location_lists = get_query_locations(query, index_dictionary) 
+edges = find_query_loop(query_location_lists)
+print(f"Edges: {edges}.")
+response_node_references = get_response_nodes(edges) 
+print(f"Response nodes: {response_node_references}.")
+response_metadata_values = lookup_metadata(response_node_references)
+print(f"Response metadata: {response_metadata_values}.")
+response_values = lookup_actual_values(response_metadata_values)
+response = format_response(response_values)
+print(f"Response: {response}.")
+```

@@ -1,3 +1,4 @@
 /.quarto/
 /_site/
 *.qmd.swp
+*.DS_Store
