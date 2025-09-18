@@ -291,3 +291,39 @@ response_values = lookup_actual_values(response_metadata_values)
 response = format_response(response_values)
 print(f"Response: {response}.")
 ```
+
+
+### Query age Jarrian Jones
+```{python}
+query = "age Jarrian Jones"
+print(f"Query: {query}.")
+
+query_location_lists = get_query_locations(query, index_dictionary) 
+edges = find_query_loop(query_location_lists)
+print(f"Edges: {edges}.")
+response_node_references = get_response_nodes(edges) 
+print(f"Response nodes: {response_node_references}.")
+response_metadata_values = lookup_metadata(response_node_references)
+print(f"Response metadata: {response_metadata_values}.")
+response_values = lookup_actual_values(response_metadata_values)
+response = format_response(response_values)
+print(f"Response: {response}.")
+```
+
+
+### Query "Jarrian age Jones"
+```{python}
+query = "Jarrian age Jones"
+print(f"Query: {query}.")
+
+query_location_lists = get_query_locations(query, index_dictionary) 
+edges = find_query_loop(query_location_lists)
+print(f"Edges: {edges}.")
+response_node_references = get_response_nodes(edges) 
+print(f"Response nodes: {response_node_references}.")
+response_metadata_values = lookup_metadata(response_node_references)
+print(f"Response metadata: {response_metadata_values}.")
+response_values = lookup_actual_values(response_metadata_values)
+response = format_response(response_values)
+print(f"Response: {response}.")
+```
