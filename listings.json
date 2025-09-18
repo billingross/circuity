@@ -2,7 +2,8 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/player-database-2/index.html",
+      "/posts/adding-more-players/index.html",
+      "/posts/basic-looping-structure/index.html",
       "/posts/player-database/index.html",
       "/posts/analyze-picks/index.html"
     ]
