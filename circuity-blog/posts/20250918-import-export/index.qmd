@@ -60,7 +60,22 @@ word_references = {"index": [{"source": "database/index.json", "index": 0}]}
 word_indexes = {"index": 0}
 ```
 
-I read each word of the comma separated values file and I try to `get()` it from the `index_dict`. If it is not in the dictionary then I can add it to `index_list` and `index_dict` and I can specify the outer `index` value based on the current length of the list.
+I read each word of the comma separated values file and I try to `get()` it from `word_references`. If it is not in the dictionary then I can add it to `index_list` and `word_references` and `word_indexes`. I can specify the outer `index` value based on the current length of the list.
+
+How do I do that?
+```
+for item in column:
+    word_indexes = []
+    words = header.split(" ")
+    for word in words:
+        word_reference = word_references.get(word)
+        if word_reference:
+            word_index = word_indexes[word]
+            word_indexes.append(word_index)
+        else:
+            # Add a new word entry to the database
+            word_indexes[word] = [{"source":         
+        
 
 ```
 current_file = "whatever_this_file_is_named.json"
@@ -111,7 +126,7 @@ def initialize_database():
 ```
 
 ```{python}
-def create_database_file(loop_name, data_column):
+def create_database_file(loop_name, data_column, index_list, word_references, word_indexes):
     # mina is in love with paul and paul is in love with mina
     # mina loves paul
     # paul loves mina
@@ -124,10 +139,34 @@ def create_database_file(loop_name, data_column):
     Returns:
         (list): Metadata references to each item in the input column.
     """
-    file_name = f"database/{loop_name}/{data_column[0]}.json"
+    # Create a list to store metadata references
+    metadata_column = []
+
+    # Name the new file to be created
+    this_file_name = f"database/{loop_name}/{data_column[0]}.json"
     
-        
-    
+    # Convert data values to metadata values 
+    for column_index, item in enumerate(data_column):
+        this_word_indexes = []
+        words = item.split(" ")
+        for word in words:
+            this_word_reference = word_references.get(word)
+            if this_word_reference:
+                # If the word already exists in the database then I simply need to get the position of it in the primary index.
+                word_index = word_indexes[word]
+                this_word_indexes.append(word_index)
+            else:
+                # Add a new word entry to the database
+                word_references[word] = [{"source": "database/index.json", "index": column_index}]
+                word_index = len(index_list)
+                word_indexes[word] = word_index
+                index_list.append({"word": word, "references": [{"source": this_file_name, "index": column_index}]})
+                this_word_indexes.append(word_index)
+        this_word_reference = {"source": "database/index.json", "indexes": this_word_indexes}
+        metadata_column.append(this_word_reference)
+    return metadata_column
+```
+
 
 ```{python}
 def import_comma_separated_values(csv_file, index_list, word_references, word_indexes):
@@ -144,6 +183,7 @@ def import_comma_separated_values(csv_file, index_list, word_references, word_in
         word_references: Updated with new words.
         word_indexes: Updated with new indexes.
     """
+    loop_name = csv_file.split('/')[-1].split('.')[0]
     
     row_matrix = []
     with open(csv_file) as csv_handle:
@@ -154,16 +194,38 @@ def import_comma_separated_values(csv_file, index_list, word_references, word_in
     column_matrix = [[row[index] for row in row_matrix] for index in range(len(row_matrix[0]))]
     #return column_matrix
 
+    metadata_columns = []
     for column in column_matrix:
-        
+        metadata_column = create_database_file(loop_name, column, index_list, word_references, word_indexes)
+        metadata_columns.append(metadata_column)
+    return metadata_columns
+```
+
+```{python}
+def convert_metadata_reference_to_value(reference, index_list):
+    indexes = reference["indexes"]
+    word_dicts = [index_list[index] for index in indexes]
+    
+    words = [word_dict["word"] for word_dict in word_dicts]
+    return (" ").join(words)
 ```
 
 Test `import_comma_separated_values`.
 ```{python}
 index_list, word_references, word_indexes = initialize_database()
 csv_file = "players.csv"
-column_matrix = import_comma_separated_values(csv_file, index_list, word_references, word_indexes)
-column_matrix
+metadata_column_matrix = import_comma_separated_values(csv_file, index_list, word_references, word_indexes)
+metadata_column_matrix
+```
+
+```{python}
+reconstituted_column_matrix = [[convert_metadata_reference_to_value(reference, index_list) for reference in column] for column in metadata_column_matrix]
+reconstituted_column_matrix
+```
+
+In order to validate my `import_comma_separated_values()` function I also need to transform the metadata values back into data values.
+```{python}
+
 ```
         
 ## Initialize the database
@@ -172,4 +234,8 @@ index_list, word_references, word_indexes = initialize_database()
 print(f"index_list: {index_list}, word_references: {word_references}, word_indexes: {word_indexes}.")
 ```
 
-## Import data from comma separated values file
+## Test the `create_database_file()` function
+```{python}
+metadata_column = create_database_file("test", ["name", "justin", "jarrian"], index_list, word_references, word_indexes)
+metadata_column
+```
