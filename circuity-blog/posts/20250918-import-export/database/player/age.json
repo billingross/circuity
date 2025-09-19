@@ -1,5 +1,5 @@
 [
-    {"source": "index.json", "indexes": [0,4]},
+    {"source": "index.json", "indexes": [1,5]},
     27,
     23,
     "database/player/position.json"

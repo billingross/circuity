@@ -36,6 +36,45 @@ I am thinking that I want to create a single comma separated values file for eac
 | Justin | Blackmon | free safety | 27 |
 | Jarrian | Jones | cornerback | 23 |
 
+## Thinking about importing
+Now that I think about it a little the structure of the data I want to import and export is pretty straightforward. I am feeling a little stuck on how to represent the database in JSON to match what I want to do with exporting so now I am going to think about it from the other side - how do I want to handle import?
+
+I want to provide a comma separated values file.
+```
+transform_csv_to_circuity_json("players.csv")
+```
+
+## Generating summary statistics at import
+What does the `transform_csv_to_circuity_json()` function do? I am going to read the comma separated values into a matrix which will be row based because that is how Python natively reads files. Then I will convert it to a columnar matrix by transposing the values. And before importing the data I will want to do data validation and generate summary statistics. For the instance of the `age` column of the `player.csv` I would create an `age.json` database file with all of the values and then an `age.statistics.json` file with summary statistics. Every time I update the `age.json` file I recalculate and update the `age.statistics.json` file as well.
+
+Because age is a numerical value I do not to transform those values. For the sake of writing the `age.json` file all I need to do is transform the name of the column `age` to the corresponding index reference. In order to do that I need to know where the word `age` is located in the `index_list`. In order to find the `age` entry I need to use the `index_dict`. You may be able to infer from their names that these variables contain different data structures. The first contains a list and the second contains a dictionary.
+
+One way that I could lookup the index of the word `age` is by iterating through the `index_list` item by item and reading the `word` value of each dictionary item until I find "age". This could be an arbitrarily long process because I do not know where in the list I will find it.
+
+## How do I populate the index?
+That bring me to the question of how I am going to populate the index in the first place. When I create the index it will a list of a single dictionary referencing itself.
+
+```
+index_list = [{"word": "index", "index": 0, "references": [{"source": "database/index.json", "index": 0}]}]
+word_references = {"index": [{"source": "database/index.json", "index": 0}]}
+word_indexes = {"index": 0}
+```
+
+I read each word of the comma separated values file and I try to `get()` it from the `index_dict`. If it is not in the dictionary then I can add it to `index_list` and `index_dict` and I can specify the outer `index` value based on the current length of the list.
+
+```
+current_file = "whatever_this_file_is_named.json"
+current_row = 7
+new_word = "banana"
+new_word_index = len(index_list)
+
+new_word_entry = {"word": new_word, "index": new_word_index, "references": [{"source": current_file, "index": current_row}]}
+index_list.append(new_word_entry)
+
+word_references[new_word] = [{"source": current_file, "index": current_row}]
+word_indexes[new_word] = new_word_index
+```
+
 ## Workflow
 - [ ] Load the database files into my Python environment
 - [ ] Map the metadata values to actual values
