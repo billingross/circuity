@@ -87,31 +87,89 @@ word_indexes[new_word] = new_word_index
 ```{python}
 #| code-fold: true
 
+# Read comma separated values file
+import csv
+# Manipulate the database structures
 import json
-import scipy
-import itertools
 ```
 
-## Load the database
-### Define database structure using a dictionary
+## Functions
 ```{python}
-database_files = [
-    "database/index.json",
-    "database/player/age.json",
-    "database/player/first-name.json",
-    "database/player/last-name.json",
-    "database/player/position.json"
-]
+def initialize_database():
+    """Create the index variables the core of the database.
+    
+    Returns:
+        (list): The primary index of words in the database stored as dictionaries with references to each location of each word in the database.
+        (dict): A mapping of each word to all of its references.
+        (dict): A mapping of each word to its position in the primary index.
+    """
+
+    index_list = [{"word": "index", "index": 0, "references": [{"source": "database/index.json", "index": 0}]}]
+    word_references = {"index": [{"source": "database/index.json", "index": 0}]}
+    word_indexes = {"index": 0}
+    return index_list, word_references, word_indexes
 ```
 
-### Convert the index from a list to a dictionary
-I natively store the index as a list of dictionaries. For the sake of reverse lookup this is useful and for the sake of lookup it is not. Here I convert the index from a list to a dictionary for the sake of lookup.
 ```{python}
-with open("database/index.json") as file_handle:
-    index_list = json.load(file_handle)
-index_dictionary = {item["value"]: item["references"] for item in index_list}
-index_dictionary
-```
-And now I have my index stored as a dictionary and a list for lookup and reverse lookup operations, respectively.
+def create_database_file(loop_name, data_column):
+    # mina is in love with paul and paul is in love with mina
+    # mina loves paul
+    # paul loves mina
+    """Create a database file from a column of data.
 
-## 
+    Arguments:
+        loop_name (str): The name of the input column.
+        data_column (list): The data column.
+
+    Returns:
+        (list): Metadata references to each item in the input column.
+    """
+    file_name = f"database/{loop_name}/{data_column[0]}.json"
+    
+        
+    
+
+```{python}
+def import_comma_separated_values(csv_file, index_list, word_references, word_indexes):
+    """Import values from a comma separated values file into the database.
+
+    Arguments:
+        csv_file (str): The path to a comma separated values file.
+        index_list (list): The primary database index.
+        word_references (dict): Mapping of each word to its database locations.
+        word_indexes (dict): Mapping of each word to its position in the primary index.
+
+    Returns:
+        index_list: Updated with new word locations.
+        word_references: Updated with new words.
+        word_indexes: Updated with new indexes.
+    """
+    
+    row_matrix = []
+    with open(csv_file) as csv_handle:
+        csv_reader = csv.reader(csv_handle)
+        for row in csv_reader:
+            row_matrix.append(row)
+
+    column_matrix = [[row[index] for row in row_matrix] for index in range(len(row_matrix[0]))]
+    #return column_matrix
+
+    for column in column_matrix:
+        
+```
+
+Test `import_comma_separated_values`.
+```{python}
+index_list, word_references, word_indexes = initialize_database()
+csv_file = "players.csv"
+column_matrix = import_comma_separated_values(csv_file, index_list, word_references, word_indexes)
+column_matrix
+```
+        
+## Initialize the database
+```{python}
+index_list, word_references, word_indexes = initialize_database()
+print(f"index_list: {index_list}, word_references: {word_references}, word_indexes: {word_indexes}.")
+```
+
+## Import data from comma separated values file
