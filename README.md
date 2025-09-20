@@ -1,5 +1,5 @@
 # circuity
-A circuitous database.
+A looping database.
 
 Check out my development blog at [https://billingross.github.io/circuity/](https://billingross.github.io/circuity/).
 
