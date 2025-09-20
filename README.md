@@ -1,5 +1,5 @@
 # circuity
-A looping database.
+A looping database implemented in Python.
 
 Check out my development blog at [https://billingross.github.io/circuity/](https://billingross.github.io/circuity/).
 
