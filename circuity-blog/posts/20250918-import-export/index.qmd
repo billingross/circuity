@@ -91,9 +91,13 @@ word_indexes[new_word] = new_word_index
 ```
 
 ## Workflow
-- [ ] Load the database files into my Python environment
-- [ ] Map the metadata values to actual values
-- [ ] Export them as comma separated values files
+- [ ] Load the `players.csv` as a matrix of rows
+- [ ] Transpose the matrix of rows into a matrix of columns
+- [ ] Convert the actual values in each column into metadata values
+- [ ] Add references to the next file to the end of each column
+- [ ] Write the metadata columns to JSON files
+- [ ] Convert the metadata columns back to data columns
+- [ ] Write the data columns to a new comma separated values file
 
 
 # Methods
@@ -102,6 +106,8 @@ word_indexes[new_word] = new_word_index
 ```{python}
 #| code-fold: true
 
+# Manipulate files
+import os
 # Read comma separated values file
 import csv
 # Manipulate the database structures
@@ -127,9 +133,6 @@ def initialize_database():
 
 ```{python}
 def create_database_file(loop_name, data_column, index_list, word_references, word_indexes):
-    # mina is in love with paul and paul is in love with mina
-    # mina loves paul
-    # paul loves mina
     """Create a database file from a column of data.
 
     Arguments:
@@ -185,19 +188,33 @@ def import_comma_separated_values(csv_file, index_list, word_references, word_in
     """
     loop_name = csv_file.split('/')[-1].split('.')[0]
     
+    # Read file into a matrix of rows
     row_matrix = []
     with open(csv_file) as csv_handle:
         csv_reader = csv.reader(csv_handle)
         for row in csv_reader:
             row_matrix.append(row)
-
+    
+    # Convert the matrix of rows to columns
     column_matrix = [[row[index] for row in row_matrix] for index in range(len(row_matrix[0]))]
-    #return column_matrix
 
+    # Convert the actual column values to references to the primary index
     metadata_columns = []
     for column in column_matrix:
         metadata_column = create_database_file(loop_name, column, index_list, word_references, word_indexes)
         metadata_columns.append(metadata_column)
+
+    # Write metadata columns to files
+    for column in metadata_columns:
+        basename = convert_metadata_reference_to_value(column[0], index_list)
+        basename_list = [character.replace(' ', '-') for character in basename]
+        new_basename = ''.join(basename_list)
+        file_name = f"{new_basename}.json" 
+        file_path = f"database/{loop_name}/{file_name}"
+    
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'w') as file_handle:
+            json.dump(column, file_handle)
     return metadata_columns
 ```
 
@@ -218,14 +235,10 @@ metadata_column_matrix = import_comma_separated_values(csv_file, index_list, wor
 metadata_column_matrix
 ```
 
+In order to validate my `import_comma_separated_values()` function I also want to transform the metadata values back into data values.
 ```{python}
 reconstituted_column_matrix = [[convert_metadata_reference_to_value(reference, index_list) for reference in column] for column in metadata_column_matrix]
 reconstituted_column_matrix
-```
-
-In order to validate my `import_comma_separated_values()` function I also need to transform the metadata values back into data values.
-```{python}
-
 ```
         
 ## Initialize the database
