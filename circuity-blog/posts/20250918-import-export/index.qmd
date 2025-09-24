@@ -75,9 +75,7 @@ for item in column:
         else:
             # Add a new word entry to the database
             word_indexes[word] = [{"source":         
-        
 
-```
 current_file = "whatever_this_file_is_named.json"
 current_row = 7
 new_word = "banana"
@@ -91,9 +89,9 @@ word_indexes[new_word] = new_word_index
 ```
 
 ## Workflow
-- [ ] Load the `players.csv` as a matrix of rows
-- [ ] Transpose the matrix of rows into a matrix of columns
-- [ ] Convert the actual values in each column into metadata values
+- [x] Load the `players.csv` as a matrix of rows
+- [x] Transpose the matrix of rows into a matrix of columns
+- [x] Convert the actual values in each column into metadata values
 - [ ] Add references to the next file to the end of each column
 - [ ] Write the metadata columns to JSON files
 - [ ] Convert the metadata columns back to data columns
@@ -116,6 +114,23 @@ import json
 
 ## Functions
 ```{python}
+#| code-fold: true
+def transpose_matrix(matrix):
+    """Transpose a matrix represented as a list of lists.
+
+    Arguments:
+        matrix (list): A list of equal length lists.
+    
+    Returns:
+        (list): A list of lists where all of the values have been transposed.
+    """
+
+    transposed_matrix = [[row[index] for row in row_matrix] for index in range(len(row_matrix[0]))]
+    return transposed_matrix
+```
+
+```{python}
+#| code-fold: true
 def initialize_database():
     """Create the index variables the core of the database.
     
@@ -125,13 +140,14 @@ def initialize_database():
         (dict): A mapping of each word to its position in the primary index.
     """
 
-    index_list = [{"word": "index", "index": 0, "references": [{"source": "database/index.json", "index": 0}]}]
-    word_references = {"index": [{"source": "database/index.json", "index": 0}]}
+    index_list = [{"word": "index", "references": [{"source": "database/index.json", "index": 0}]}]
+    word_references = {"index": [{"source": "index", "index": 0}]}
     word_indexes = {"index": 0}
     return index_list, word_references, word_indexes
 ```
 
 ```{python}
+#| code-fold: true
 def create_database_file(loop_name, data_column, index_list, word_references, word_indexes):
     """Create a database file from a column of data.
 
@@ -167,11 +183,56 @@ def create_database_file(loop_name, data_column, index_list, word_references, wo
                 this_word_indexes.append(word_index)
         this_word_reference = {"source": "database/index.json", "indexes": this_word_indexes}
         metadata_column.append(this_word_reference)
+
+        # Add reference to the next at the end of each metadata column
+        #next_column_index = column_index + 1
+        #if next_column_index >= len(data_column):
+        #    next_column_index = 0
+        #next_column_name = data_column[next_column_index][0]
+        #next_file_name = f"database/{loop_name}/{next_column_name}.json"
+        #metadata_column.append(next_file_name)
+
     return metadata_column
 ```
 
+```{python}
+#| code-fold: true
+def convert_comma_separated_values_file_to_matrix(csv_file):
+    # Read file into a matrix of rows
+    row_matrix = []
+    with open(csv_file) as csv_handle:
+        csv_reader = csv.reader(csv_handle)
+        for row in csv_reader:
+            row_matrix.append(row)
+    
+    # Convert the matrix of rows to columns
+    column_matrix = [[row[index] for row in row_matrix] for index in range(len(row_matrix[0]))]
+    return column_matrix
+```
 
 ```{python}
+def convert_data_matrix_to_metadata_matrix(data_matrix, index_list, word_references, word_indexes):
+    metadata_columns = []
+    for column in data_matrix:
+        metadata_column = []
+        column_name = column[0]
+
+        for row_index, value in enumerate(column):
+            reference = convert_string_to_reference(value, column_name, row_index, index_list, word_references, word_indexes)
+            metadata_column.append(reference)
+        metadata_columns.append(metadata_column)
+    return metadata_columns
+```    
+
+```{python}
+def convert_metadata_matrix_to_dictionary(metadata_matrix, index_list):
+    dictionary_keys = [convert_reference_to_string(references[0], index_list) for references in metadata_matrix]
+    metadata_dictionary = dict(zip(dictionary_keys, metadata_matrix))
+    return metadata_dictionary
+```    
+
+```{python}
+#| code-fold: true
 def import_comma_separated_values(csv_file, index_list, word_references, word_indexes):
     """Import values from a comma separated values file into the database.
 
@@ -201,12 +262,17 @@ def import_comma_separated_values(csv_file, index_list, word_references, word_in
     # Convert the actual column values to references to the primary index
     metadata_columns = []
     for column in column_matrix:
-        metadata_column = create_database_file(loop_name, column, index_list, word_references, word_indexes)
+        metadata_column = []
+        #metadata_column = create_database_file(loop_name, column, index_list, word_references, word_indexes)
+        for row_index, value in enumerate(column):
+            reference = convert_string_to_reference(value, csv_file, row_index, index_list, word_references, word_indexes)
+            metadata_column.append(reference)
         metadata_columns.append(metadata_column)
 
     # Write metadata columns to files
     for column in metadata_columns:
-        basename = convert_metadata_reference_to_value(column[0], index_list)
+        print(column)
+        basename = convert_reference_to_string(column[0], index_list)
         basename_list = [character.replace(' ', '-') for character in basename]
         new_basename = ''.join(basename_list)
         file_name = f"{new_basename}.json" 
@@ -219,32 +285,144 @@ def import_comma_separated_values(csv_file, index_list, word_references, word_in
 ```
 
 ```{python}
-def convert_metadata_reference_to_value(reference, index_list):
-    indexes = reference["indexes"]
-    word_dicts = [index_list[index] for index in indexes]
+def convert_reference_to_string(reference, index_list):
+    #print(f"Converting reference '{reference}' to string.")
+    if not isinstance(reference, dict):
+        # Numbers stored in metadata files can be returned as is.
+        return reference
     
-    words = [word_dict["word"] for word_dict in word_dicts]
-    return (" ").join(words)
+    indexes = reference["indexes"]
+    #word_dicts = [index_list[index] for index in indexes]
+
+
+    words = [convert_index_to_word(index, index_list) for index in indexes]
+    
+    #words = [word_dict["word"] for word_dict in word_dicts]
+    this_string = (" ").join(words)
+    #print(f"Converted reference {reference} to string {this_string}.")
+    return this_string
 ```
 
-Test `import_comma_separated_values`.
 ```{python}
-index_list, word_references, word_indexes = initialize_database()
-csv_file = "players.csv"
-metadata_column_matrix = import_comma_separated_values(csv_file, index_list, word_references, word_indexes)
-metadata_column_matrix
+def convert_index_to_word(index, index_list):
+    #print(f"Converting index ({index}) to word.")
+    # The word_dict contains the value of the word as other metadata.
+    word_dict = index_list[index]
+    word = word_dict["word"]
+    #print(f"Converted index ({index}) to word {word}.")
+    return word
 ```
 
-In order to validate my `import_comma_separated_values()` function I also want to transform the metadata values back into data values.
 ```{python}
-reconstituted_column_matrix = [[convert_metadata_reference_to_value(reference, index_list) for reference in column] for column in metadata_column_matrix]
-reconstituted_column_matrix
+def convert_string_to_reference(string, this_file_name, row_index, index_list, word_references, word_indexes):
+    #print(f"Converting string '{string}' to reference.")
+    # All values can be stored as strings. In order to determine whether
+    # a value contains words or numbers I am going to try converting it
+    # to a float which is a numeric type. If I can convert it to a 
+    # number then I will ignore it.
+    try:
+        number = float(string)
+        return number
+    except:
+        this_string_indexes = []
+        words = string.split(" ")
+       
+        conversion_dictionary = {
+                                  "this_file_name": this_file_name,
+                                  "row_index": row_index,
+                                  "index_list": index_list,
+                                  "word_references": word_references,
+                                  "word_indexes": word_indexes
+        }  
+        this_string_indexes = [convert_word_to_index(word, **conversion_dictionary) for word in words] 
+        this_string_reference = {
+                                 "source": "database/index.json",
+                                 "indexes": this_string_indexes
+        }
+        #print(f"Converted string '{string}' to reference {this_string_reference}.")
+        return this_string_reference
 ```
-        
-## Initialize the database
+
+```{python}
+def convert_word_to_index(word, row_index, this_file_name, index_list, word_references, word_indexes):
+    #print(f"Converting word '{word}' to index.")
+    if not isinstance(word, str):
+        # I want to convert words to references and leave numbers as they are
+        return ValueError(f"This word is not of type string: {word}.")
+    
+    this_word_reference = word_references.get(word)
+    if this_word_reference:
+        # If the word already exists in the database then get the 
+        # position of it in the primary index.
+        word_index = word_indexes.get(word)
+        if not word_index:
+            return ValueError(f"Word '{word}' was not found in word_indexes: {word_indexes}.")
+    else:
+        # If the word does not yet exist in the database then
+        # add a new word entry to the database
+        word_references[word] = [{"source": "database/index.json", "index": row_index}]
+        word_index = len(index_list)
+        word_indexes[word] = word_index
+        index_list.append({
+                           "word": word,
+                           "references": [{
+                                           "source": this_file_name,
+                                           "index": row_index
+                                          }]
+                          })
+    #print(f"Converted word '{word}' to index {word_index}.")
+    return word_index
+```
+
+## Initialize database
 ```{python}
 index_list, word_references, word_indexes = initialize_database()
 print(f"index_list: {index_list}, word_references: {word_references}, word_indexes: {word_indexes}.")
+```
+
+## Convert comma separated values file to data matrix
+```{python}
+csv_file = "players.csv"
+data_matrix = convert_comma_separated_values_file_to_matrix(csv_file)
+data_matrix
+```
+
+## Convert data matrix to metadata matrix
+```{python}
+metadata_matrix = convert_data_matrix_to_metadata_matrix(data_matrix, index_list, word_references, word_indexes)
+metadata_matrix
+```
+
+## Convert data matrix to metadata matrix
+```{python}
+#index_list, word_references, word_indexes = initialize_database()
+#csv_file = "players.csv"
+#metadata_column_matrix = import_comma_separated_values(csv_file, index_list, word_references, word_indexes)
+#metadata_column_matrix
+```
+
+## Convert metadata matrix back to data matrix
+In order to validate my `import_comma_separated_values()` function I also want to transform the metadata values back into data values.
+```{python}
+reconstituted_data_matrix = [[convert_reference_to_string(reference, index_list) for reference in column] for column in metadata_matrix]
+reconstituted_data_matrix
+```
+
+## Look at the state of the primary index
+```{python}
+index_list
+```
+
+## Convert the metadata matrix to a dictionary
+```{python}
+metadata_dictionary = convert_metadata_matrix_to_dictionary(metadata_matrix, index_list)
+metadata_dictionary
+```
+
+Before I worry about serializing the database according to this new structure I want to make sure that my query logic still works.
+      
+## Write the database to files
+```{python}
 ```
 
 ## Test the `create_database_file()` function
