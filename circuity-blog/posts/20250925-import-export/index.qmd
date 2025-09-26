@@ -363,14 +363,6 @@ metadata_matrix = convert_data_matrix_to_metadata_matrix(data_matrix, index_list
 metadata_matrix
 ```
 
-## Convert data matrix to metadata matrix
-```{python}
-#index_list, word_references, word_indexes = initialize_database()
-#csv_file = "players.csv"
-#metadata_column_matrix = import_comma_separated_values(csv_file, index_list, word_references, word_indexes)
-#metadata_column_matrix
-```
-
 ## Convert metadata matrix back to data matrix
 In order to validate my `import_comma_separated_values()` function I also want to transform the metadata values back into data values.
 ```{python}
