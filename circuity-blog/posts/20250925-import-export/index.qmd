@@ -158,7 +158,7 @@ def initialize_database():
 def convert_comma_separated_values_file_to_matrix(csv_file):
     # Read file into a matrix of rows
     row_matrix = []
-    with open(csv_file) as csv_handle:
+    with open(csv_file, 'r') as csv_handle:
         csv_reader = csv.reader(csv_handle)
         for row in csv_reader:
             row_matrix.append(row)
