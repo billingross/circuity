@@ -2,8 +2,9 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/adding-more-players/index.html",
-      "/posts/basic-looping-structure/index.html",
+      "/posts/20250925-import-export/index.html",
+      "/posts/20250918-adding-more-players/index.html",
+      "/posts/20250917-basic-looping-structure/index.html",
       "/posts/player-database/index.html",
       "/posts/analyze-picks/index.html"
     ]
