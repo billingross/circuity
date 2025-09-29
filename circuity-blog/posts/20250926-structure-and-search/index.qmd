@@ -1,0 +1,337 @@
+---
+title: "Player database: refining the structure of my database"
+author: "Paul Billing-Ross"
+date: "2025-09-29"
+categories: [player database, design, structure, naming]
+---
+# Introduction
+In my previous post I focussed on refining the structure of my database in order to enable importing data. I decided to disentangle the storage method from the data structure by removing file references from the data. This will provide me more flexibility in structuring and storing my data.
+
+Now that I have made some changes to structure I want to revisit my search algorithm and get it to work again while also whittling away some of the extraneous operations that I initially added. By simplifying it to the most fundamental methods I can better understand how it works.
+
+When I import a table into a Circuity database each column in the table is stored individually in the `metadata_dictionary`. Each key is the name of a column and the value contains all of the values for that column. Items in the column that contain strings are converted to metadata referenes and numerical values are left as is. 
+
+The metadata dictionary allows me to store all the information of the database natively in Python data structures so that there are not any file reading intrinsic to the database operations. I will need to refactor my search mechanism to fit this new model.
+
+## Design decisions
+### Do I want to maintain the column name as item zero?
+**Answer: Yes.**
+
+Each column in my database includes the column name at position zero. Now that I have a metadata dictionary that maps the name of the column to the values, do I still want to maintain this structure?
+
+One of the concepts I want to incorporate into the database is that of being able to represent all of the connections between data as metadata so that I can share knowledge without sharing data. By storing all of the information necessary to perform search operations within the column values I can share new data structures that allow fully reproducible search operations without having to share the data itself. And for the sake of sharing these patterns I will have to serialize the metadata to files.
+
+### Do I want to organize columns according to loops?
+**Answer: Yes.**
+
+When I import data from a comma separated values file I consider the structure of that file to represnt a loop because every column in the table is related to every other column. In the case where I import (2) files into my database that both include the column `age` I want some way to distinguish which column is most relevant to my query and the way I can do that is by looking at the other columns in the loop.
+
+If I have (5) people named "Jarrian Jackson" in my database and I search "Jarrian Jackson age" I can imagine getting back (5) results. If I search "Jarrian Jackson team age" I can imagine only getting results for any Jarrian Jackson that plays on a team if both `team` and `age` are part of the same loop. In this way the loop provides important context for determining result validity.
+
+### Do I want to reference the next column in a loop as the last element of that column?
+**Answer: Yes.**
+
+I thought about moving this information to a separate file that only defines the columns in the loop. A problem I have with that is that now I need to read (2) data structures to figure out where to go next and then I need to worry about maintaining the relationship between those structures and that abstraction makes the connection more tenuous and fragile when I want to make my internal database structure as robust as possible. For that reason I include the name and the name of the next partner of that column in the column itself.
+
+### Do I want to include the loop name in the column name?
+**Answer: Yes.**
+
+I want to use loops to organize my database and facilitate search. I want all of the information necessary to traverse these loops to be stored within each column. Because the loop name and the column name are essential for identifying the appropriate next step in a search I want both of these pieces of information together in each column.
+
+### Do I want to change the naming conventions of the index?
+**Answer: Yes.**
+
+- Changing `references` to `locations`
+
+I am using the term `reference` to indicate a dictionary that points to a column and a position. In that sense using `references` in the index is not so helpful because it is abstract even if it is accurate.
+
+```
+index_list = [{'word': 'index', 'references': [{'source': 'index', 'index': 0}]}]
+```
+
+If I change `references` to `locations` it becomes clearer to me that this index is pointing out all of the locations where I can find this word.
+```
+index_list = [{'word': 'index', 'locations': [{'source': 'index', 'index': 0}]}]
+```
+
+- Changing `source` to `column`
+
+When I chose the name `source` I was thinking about data storage rather than data structure. Now that I am abstracting away the storage component I can focus on words which describe how my data is organized. And column indicates that I am organizing my database into columns and indicates a relationship to columnar databases. This also makes clear that the index is itself a column.
+```
+index_list = [{'word': 'index', 'locations': [{'column': 'index', 'index': 0}]}]
+```
+
+- Changing `index` to `position`
+
+I have been using the term "index" so much that I confuse myself when trying to figure out what I mean. By changing the reference key from `index` to `position` I can disentangle the index column from the position that I am referencing within a particular column.
+```
+index_list = [{'word': 'index', 'locations': [{'column': 'index', 'position': 0}]}]
+```
+Now when I look at this entry in the index I can more inuitively understand what it means because the terms are more specific.
+
+### Do I want to add the index to the `metadata_dictionary`?
+**Answer: No.**
+
+The index is a special column which contains the mapping from data to metadata. In that way it is structured differently from every other column in the database. It also contains the private keys that unlock the meaning of the rest of the database. I also use it differently from every other column.
+
+## Updates
+- [x] Read comma separated values as a matrix of rows and convert to a matrix of columns
+- [x] Change naming conventions of the index
+- [x] Add loop name to column names
+- [x] Add next column name to the end of each column
+
+# Methods
+## Load dependencies
+```{python}
+#| code-fold: true
+
+# Manipulate files
+import os
+from pathlib import Path
+# Read comma separated values file
+import csv
+# Manipulate the database structures
+import json
+```
+
+## Functions
+### Import and export functions
+```{python}
+#| code-fold: true
+def transpose_matrix(matrix):
+    """Transpose a matrix represented as a list of lists.
+
+    Arguments:
+        matrix (list): A list of equal length lists.
+    
+    Returns:
+        (list): A list of lists where all of the values have been transposed.
+    """
+
+    transposed_matrix = [[row[index] for row in row_matrix] for index in range(len(row_matrix[0]))]
+    return transposed_matrix
+```
+
+```{python}
+#| code-fold: true
+def initialize_database():
+    """Generate the index and associated data structures that are at the core of the database.
+    
+    Returns:
+        (list): The primary index of words in the database stored as dictionaries with references to each location of each word in the database.
+        (dict): The primary index represented as a dictionary where the key is the word and the value is a list of locations where that word occurs in the metadata dictionary.
+        (dict): A mapping of each word to its position in the primary index.
+    """
+
+    index_list = [{"word": "index", "locations": [{"column": "index", "position": 0}]}]
+    index_dictionary = {item["word"]: item["locations"] for item in index_list}
+    word_positions = {"index": 0}
+    return {
+            "index_list": index_list, 
+            "index_dictionary": index_dictionary, 
+            "word_positions": word_positions
+    }
+```
+
+```{python}
+#| code-fold: true
+def read_comma_separated_values_file_to_matrix(csv_file):
+    # Read file into a matrix of rows
+    with open(csv_file, 'r') as csv_handle:
+        csv_reader = csv.reader(csv_handle)
+        return [row for row in csv_reader]
+```
+
+```{python}
+#| code-fold: true
+def add_loop_name_to_first_row_of_matrix(csv_file_path, matrix):
+    stem_name = Path(csv_file_path).stem
+    # Treat underscores as spaces
+    stem_words = stem_name.split("_")
+    stem_string = " ".join(stem_words)
+
+    appended_first_row = [" ".join([stem_string, value]) for value in matrix[0]]
+    matrix[0] = appended_first_row
+    return matrix
+```
+
+```{python}
+#| code-fold: true
+def convert_data_matrix_to_metadata_matrix(data_matrix, index_list, index_dictionary, word_positions):
+    metadata_columns = []
+    for column in data_matrix:
+        metadata_column = []
+        column_name = column[0]
+
+        for position, value in enumerate(column):
+            reference = convert_string_to_reference(value, column_name, position, index_list, index_dictionary, word_positions)
+            metadata_column.append(reference)
+        metadata_columns.append(metadata_column)
+    return metadata_columns
+```    
+
+```{python}
+#| code-fold: true
+def convert_metadata_matrix_to_dictionary(metadata_matrix, index_list):
+    dictionary_keys = [convert_reference_to_string(references[0], index_list) for references in metadata_matrix]
+    metadata_dictionary = dict(zip(dictionary_keys, metadata_matrix))
+    return metadata_dictionary
+```    
+
+```{python}
+#| code-fold: true
+def convert_reference_to_string(reference, index_list):
+    #print(f"Converting reference '{reference}' to string.")
+    if not isinstance(reference, dict):
+        # Numbers stored in metadata files can be returned as is.
+        return reference
+    
+    positions = reference["positions"]
+
+    words = [convert_index_to_word(position, index_list) for position in positions]
+    
+    this_string = (" ").join(words)
+    #print(f"Converted reference {reference} to string {this_string}.")
+    return this_string
+```
+
+```{python}
+#| code-fold: true
+def convert_index_to_word(index, index_list):
+    #print(f"Converting index ({index}) to word.")
+    # The word_dict contains the value of the word as other metadata.
+    word_dict = index_list[index]
+    word = word_dict["word"]
+    #print(f"Converted index ({index}) to word {word}.")
+    return word
+```
+
+```{python}
+#| code-fold: true
+def convert_string_to_reference(string, column_name, position, index_list, word_references, word_positions):
+    #print(f"Converting string '{string}' to reference.")
+    # All values can be stored as strings. In order to determine whether
+    # a value contains words or numbers I am going to try converting it
+    # to a float which is a numeric type. If I can convert it to a 
+    # number then I will ignore it.
+    try:
+        number = float(string)
+        return number
+    except:
+        this_string_positions = []
+        words = string.split(" ")
+       
+        conversion_dictionary = {
+                                  "column_name": column_name,
+                                  "position": position,
+                                  "index_list": index_list,
+                                  "index_dictionary": index_dictionary,
+                                  "word_positions": word_positions
+        }  
+        this_string_positions = [convert_word_to_index_position(word, **conversion_dictionary) for word in words] 
+        this_string_reference = {
+                                 "column": "index",
+                                 "positions": this_string_positions
+        }
+        #print(f"Converted string '{string}' to reference {this_string_reference}.")
+        return this_string_reference
+```
+
+```{python}
+#| code-fold: true
+def convert_word_to_index_position(word, column_name, position, index_list, index_dictionary, word_positions):
+    #print(f"Converting word '{word}' to index position.")
+    if not isinstance(word, str):
+        # I want to convert words to references and leave numbers as they are
+        return ValueError(f"This word is not of type string: {word}.")
+    
+    this_word_locations = index_dictionary.get(word)
+    if this_word_locations:
+        # If the word already exists in the database then get the position of it in the primary index.
+        word_position = word_positions.get(word)
+        if not word_position:
+            return ValueError(f"Word '{word}' was not found in word_positions: {word_positions}.")
+    else:
+        # If the word does not yet exist in the database then add a new word entry to the database
+        word_locations_list = [{"column": column_name, "position": position}]
+        
+        word_position = len(index_list)
+        word_positions[word] = word_position
+        index_list.append({
+                           "word": word,
+                           "locations": [{
+                                           "column": column_name,
+                                           "position": position
+                           }]
+        })
+        index_dictionary[word] = word_locations_list
+    #print(f"Converted word '{word}' to index position {word_position}.")
+    return word_position
+```
+
+# Results
+## Initialize and populate database
+```{python}
+csv_file_path = 'player.csv'
+
+database_structures = initialize_database()
+index_list = database_structures["index_list"]
+index_dictionary = database_structures["index_dictionary"]
+word_positions = database_structures["word_positions"]
+
+row_matrix = read_comma_separated_values_file_to_matrix(csv_file_path)
+looped_row_matrix = add_loop_name_to_first_row_of_matrix(csv_file_path, row_matrix)
+column_matrix = transpose_matrix(looped_row_matrix)
+
+
+# Add the next column name to the end of each column
+looped_column_matrix = column_matrix.copy()
+for current_position, column in enumerate(looped_column_matrix):
+    next_position = current_position + 1
+    if next_position >= len(column_matrix):
+        next_column_name = column_matrix[0][0]
+        column.append(next_column_name)
+    else:
+        next_column_name = column_matrix[current_position + 1][0]
+        column.append(next_column_name)
+
+#data_matrix = convert_comma_separated_values_file_to_matrix(csv_file)
+metadata_matrix = convert_data_matrix_to_metadata_matrix(looped_column_matrix, index_list, index_dictionary, word_positions)
+metadata_dictionary = convert_metadata_matrix_to_dictionary(metadata_matrix, index_list)
+```
+## Fundamental database structures
+### Index list
+The index list stores references to all of the locations where each word is located and is structured as a list so that if I know the position of the word from one of the database metadata files I can easily look it up based on its position in this list.
+```{python}
+index_list
+```
+
+### Index dictionary
+The index dictionary stores references to all of the locations where each word is located. It is stored as a dictionary so that I can look up all of the locations of a word by the word itself.
+```{python}
+index_dictionary
+```
+
+### Word index
+The word index indicates the position of each word within the index list.
+```{python}
+word_positions
+```
+
+### Column matrix
+The column matrix after the next column pointers have been added.
+```{python}
+looped_column_matrix
+```
+
+### Metadata matrix
+```{python}
+metadata_matrix
+```
+
+### Metadata dictionary
+The metadata dictionary is a new structure that I added in the last post.
+```{python}
+metadata_dictionary
+```
+
