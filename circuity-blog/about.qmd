@@ -1,0 +1,13 @@
+---
+title: "About"
+image: profile.jpg
+about:
+  template: jolla
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/billingross/circuity
+
+---
+
+Larger than Average Language Modeller. Is Mina Kimes here? Because hubba hubba, dat girl in trubba ;). For the [sic]ophants. Navigating edgy solution spaces.
