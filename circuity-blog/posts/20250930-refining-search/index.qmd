@@ -138,18 +138,13 @@ def update_database(column, index_list, word_index_positions):
             words = this_string.split(" ")
     
         for word in words:
-            # The following line does not work.
-            #print(f"Current index list: {index_list}.")
             new_word_location = {'column': column_name, 'position': position}
             word_index_position = word_positions.get(word)
             if word_index_position:
-                word_locations_dictionary = index_list[word_index_position]
                 # Add new location dictionary to locations list
-                #print(word_locations_dictionary.keys())
-                #word_locations_dictionary['locations'].append(new_word_location)
                 index_list[word_index_position]['locations'].append(new_word_location)
             else:
-                # I need to add a new item to the index_list
+                # Add this word as a new item in the index_list
                 index_list = add_new_word_to_index(word, column_name, position, index_list, word_positions)
 ```
 
@@ -181,11 +176,9 @@ def initialize_database():
     """
 
     index_list = [{"word": "index", "locations": [{"column": "index", "position": 0}]}]
-    index_dictionary = {item["word"]: item["locations"] for item in index_list}
     word_positions = {"index": 0}
     return {
             "index_list": index_list, 
-            "index_dictionary": index_dictionary, 
             "word_positions": word_positions
     }
 ```
@@ -215,7 +208,6 @@ def add_loop_name_to_first_row_of_matrix(csv_file_path, matrix):
 ```{python}
 #| code-fold: true
 def convert_data_matrix_to_metadata_matrix(data_matrix, word_positions):
-#def convert_data_matrix_to_metadata_matrix(data_matrix, index_list, index_dictionary, word_positions):
     metadata_columns = []
     for column in data_matrix:
         metadata_column = []
@@ -223,7 +215,6 @@ def convert_data_matrix_to_metadata_matrix(data_matrix, word_positions):
 
         for position, value in enumerate(column):
             reference = read_string_to_reference(value, word_positions)
-            #reference = convert_string_to_reference(value, column_name, position, index_list, index_dictionary, word_positions)
             metadata_column.append(reference)
         metadata_columns.append(metadata_column)
     return metadata_columns
@@ -231,7 +222,6 @@ def convert_data_matrix_to_metadata_matrix(data_matrix, word_positions):
 
 ```{python}
 #| code-fold: true
-#def convert_metadata_matrix_to_dictionary(metadata_matrix, index_list):
 def convert_metadata_matrix_to_dictionary(metadata_matrix):
     dictionary_keys = [tuple(references[0]['positions']) for references in metadata_matrix]
     metadata_dictionary = dict(zip(dictionary_keys, metadata_matrix))
@@ -285,51 +275,6 @@ def read_string_to_reference(this_string, word_positions):
     return this_string_reference
 ```
 
-```
-# NOT IN USE
-def import_columnar_matrix_into_database(matrix, loop_name, index_list, index_dictionary, word_positions):
-    for column in matrix:
-        column_name =  [column][0]
-
-        for item in column:
-            try:
-                number = float(string)
-                return number
-            except:
-                words = string.split()
-```
-                
-```
-#| code-fold: true
-def convert_string_to_reference(string, column_name, position, index_list, word_references, word_positions):
-    #print(f"Converting string '{string}' to reference.")
-    # All values can be stored as strings. In order to determine whether
-    # a value contains words or numbers I am going to try converting it
-    # to a float which is a numeric type. If I can convert it to a 
-    # number then I will ignore it.
-    try:
-        number = float(string)
-        return number
-    except:
-        this_string_positions = []
-        words = string.split(" ")
-       
-        conversion_dictionary = {
-                                  "column_name": column_name,
-                                  "position": position,
-                                  "index_list": index_list,
-                                  "index_dictionary": index_dictionary,
-                                  "word_positions": word_positions
-        }  
-        this_string_positions = [convert_word_to_index_position(word, **conversion_dictionary) for word in words] 
-        this_string_reference = {
-                                 "column": "index",
-                                 "positions": this_string_positions
-        }
-        #print(f"Converted string '{string}' to reference {this_string_reference}.")
-        return this_string_reference
-```
-
 ```{python}
 #| code-fold: true
 def read_word_to_index_position(word, word_positions):
@@ -341,38 +286,6 @@ def read_word_to_index_position(word, word_positions):
         return word_position
     else:
         raise ValueError(f"Could not find word {word} in word_positions: {word_positions}.")
-```
-
-```{python}
-#| code-fold: true
-def convert_word_to_index_position(word, column_name, position, index_list, index_dictionary, word_positions):
-    #print(f"Converting word '{word}' to index position.")
-    if not isinstance(word, str):
-        # I want to convert words to references and leave numbers as they are
-        return ValueError(f"This word is not of type string: {word}.")
-    
-    this_word_locations = index_dictionary.get(word)
-    if this_word_locations:
-        # If the word already exists in the database then get the position of it in the primary index.
-        word_position = word_positions.get(word)
-        if not word_position:
-            return ValueError(f"Word '{word}' was not found in word_positions: {word_positions}.")
-    else:
-        # If the word does not yet exist in the database then add a new word entry to the database
-        word_locations_list = [{"column": column_name, "position": position}]
-        
-        word_position = len(index_list)
-        word_positions[word] = word_position
-        index_list.append({
-                           "word": word,
-                           "locations": [{
-                                           "column": column_name,
-                                           "position": position
-                           }]
-        })
-        index_dictionary[word] = word_locations_list
-    #print(f"Converted word '{word}' to index position {word_position}.")
-    return word_position
 ```
 
 ```{python}
@@ -549,7 +462,6 @@ csv_file_path = 'player.csv'
 
 database_structures = initialize_database()
 index_list = database_structures["index_list"]
-index_dictionary = database_structures["index_dictionary"]
 word_positions = database_structures["word_positions"]
 
 row_matrix = read_comma_separated_values_file_to_matrix(csv_file_path)
@@ -559,17 +471,10 @@ column_matrix = transpose_matrix(looped_row_matrix)
 # Add the next column name to the end of each column
 looped_column_matrix = add_loop_name_to_ends_of_columns_in_matrix(column_matrix)
 
-#update_database(column, index_list, word_positions) for column in looped_column_matrix)
-index_list_new = index_list.copy()
 for column in looped_column_matrix:
-    update_database(column, index_list_new, word_positions)
-index_list_new
-```
+    update_database(column, index_list, word_positions)
 
-```{python}
-#metadata_column_matrix = convert_data_matrix_to_metadata_matrix(looped_column_matrix, index_list_new, index_dictionary, word_positions)
 metadata_column_matrix = convert_data_matrix_to_metadata_matrix(looped_column_matrix, word_positions)
-#metadata_column_dictionary = convert_metadata_matrix_to_dictionary(metadata_column_matrix, index_list_new)
 metadata_column_dictionary = convert_metadata_matrix_to_dictionary(metadata_column_matrix)
 ```
 
@@ -580,18 +485,12 @@ The index list stores references to all of the locations where each word is loca
 index_list
 ```
 
-### Index new list
-```{python}
-index_list_new
-```
-
 ## Index list generated using new update_database function
 
 ### Index dictionary
 The index dictionary stores references to all of the locations where each word is located. It is stored as a dictionary so that I can look up all of the locations of a word by the word itself.
 ```{python}
-#index_dictionary
-{item["word"]: item["locations"] for item in index_list_new}
+{item["word"]: item["locations"] for item in index_list}
 ```
 
 ### Word index
@@ -622,29 +521,25 @@ Process query
 ```{python}
 query = 'jarrian jones age'
 
-query_locations_list = get_query_word_column_locations(query, index_list_new, word_positions)
+query_locations_list = get_query_word_column_locations(query, index_list, word_positions)
 query_locations_list
 ```
 Now I have (1) list containing (3) dictionaries; one for each of the words in my query. Each dictionary contains a set of key:value pairs where each key describes the name of a column in the database and each value indicates the position that the query word occurs at in that column.
 
 Now that I have my query location lists the next thing that I want to do is a column traversal search to find loops that connect all of these words. In order to find a loop I only need to check whether I can get from the column of one query word to the next. Because of that I do not need to use the column positions that are stored in the values of my dictionaries. I can simply use the keys.
 
-```
-[{(1, 2, 3): 2}, {(1, 6, 3): 2}, {(1, 9): 3}]
-```
-
 Another value of having the column names in this metadata format is that it is simpatico with the structure of the `metadata_column_dictionary` which contains all of the database connections that I will use for graph traversal.
 
-```
+```{python}
 looped_query_locations_list = query_locations_list.copy()
 looped_query_locations_list.append(looped_query_locations_list[0])
 print(looped_query_locations_list)
 ```
 
 Test file traversal search.
-```
-first_column = (14,15,16)
-last_column = (14,22)
+```{python}
+first_column = (1,2,3)
+last_column = (1,9)
 
 result = column_traversal_search(
                                  metadata_column_dictionary,
@@ -657,7 +552,7 @@ result
 Now that I can see that column traversal search works with the column metadata keys that I have provided I can try implementing it in a more programmatic function that I have already prototyped with `find_query_loop()`.
 
 ## Find loops through columns that connect all query words
-```
+```{python}
 result = find_query_loop(query_locations_list, metadata_column_dictionary)
 result
 ```
@@ -669,7 +564,7 @@ With valid paths from column to column I need to integrate column position infor
 ### Ranking paths
 One of the challenges that I face is prioritizing results when there are multiple valid loops that connect all of the query words. Because all of the items at the same position in a loop are part of the same "row" they are explicitly connected to each other.
 
-```
+```{python}
 looped_viable_edges = []
 for edge_position, viable_edges in enumerate(result):
     for edge in viable_edges:
@@ -679,12 +574,12 @@ for edge_position, viable_edges in enumerate(result):
 looped_viable_edges
 ```
 
-```
+```{python}
 chosen_edges = choose_loop(looped_viable_edges, previous_node=None)
 chosen_edges
 ```
 
-```
+```{python}
 response_documents = get_response_documents(chosen_edges)
 response_documents
 ```
@@ -692,7 +587,7 @@ Now I have the documents that contain the results that I am looking for. In orde
 
 In the case of variables I want to infer the appropriate row to return a value from by looking at the rows of the surrounding words. For instance if I query "jarrian jones age" and age is at the zero position then I would want to look at which positions "jones" and "jarrian" are in because they are the adjacent words when I consider this query as a loop. If those adjacent words occupy different rows then I can decide which one to prioritize and return both results. I will probably prioritize the row of the previous word over the next word.
 
-```
+```{python}
 def get_previous_position(current_position, query_locations_lists):
     if current_position == 0:
         # If the current document is the first in the loop then the previous document is the last.
@@ -702,7 +597,7 @@ def get_previous_position(current_position, query_locations_lists):
     return previous_position
 ```
 
-```
+```{python}
 def get_next_position(current_position, query_locations_lists):
     if current_position == len(query_locations_lists) - 1:
         # If the current document is the last in the loop then the next document is the first.
@@ -712,7 +607,7 @@ def get_next_position(current_position, query_locations_lists):
     return next_position
 ```
 
-```
+```{python}
 def assign_document_positions(response_documents, query_locations_lists):
     for query_position, document in enumerate(response_documents):
         
