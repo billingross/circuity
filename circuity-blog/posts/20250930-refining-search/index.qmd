@@ -307,8 +307,8 @@ def add_loop_name_to_ends_of_columns_in_matrix(column_matrix):
 ## Search algorithm
 ```{python}
 #| code-fold: true
-def column_traversal_search(metadata_column_dictionary, current_column_key, column_keys_to_look_for, columns_traversed=[]):
-    """Find a path from the current file to one of the ones I am looking for.
+def column_traversal_search(metadata_column_dictionary, current_column_key, column_keys_to_look_for, columns_traversed=[], viable_paths=[]):
+    """Find all viable paths from the current column to the ones I am looking for.
 
     Args:
         metadata_column_dictionary (dict): A dictionary containing all of the database metadata.
@@ -319,21 +319,32 @@ def column_traversal_search(metadata_column_dictionary, current_column_key, colu
     Returns:
         columns_traversed (list): Once a destination file has been found this function will return the list of files traversed.
     """
+    if current_column_key in columns_traversed:
+        print(f"Completed a loop and returning results. Current column key: {current_column_key}, columns traversed: {columns_traversed}.")
+        # Return all viable paths once I complete a loop
+        return viable_paths
+
     columns_traversed.append(current_column_key)
     print(f"Current column key: {current_column_key}. "
           f"Columns to look for: {column_keys_to_look_for}. "
-          f"Columns traversed: {columns_traversed}.")
-    
+          f"Columns traversed: {columns_traversed}."
+          f"Viable paths: {viable_paths}.")
+
+    # Add the current path to the list of viable paths 
     if current_column_key in column_keys_to_look_for:
-        return columns_traversed
-    else:
-        print(f"Metadata column keys: {metadata_column_dictionary.keys()}.")
-        next_column_key = tuple(metadata_column_dictionary[tuple(current_column_key)][-1]['positions'])
-        return column_traversal_search(
-                                       metadata_column_dictionary,
-                                       next_column_key,
-                                       column_keys_to_look_for,
-                                       columns_traversed)
+        viable_paths.append(columns_traversed.copy())
+        print(f"Added viable path: {viable_paths}.")
+    
+    current_column= metadata_column_dictionary[current_column_key]
+    # I need to convert the list of index positions into a tuple so that
+    # I can use it as a dictionary key.
+    next_column_key = tuple(current_column[-1]['positions'])
+    return column_traversal_search(
+                                   metadata_column_dictionary,
+                                   next_column_key,
+                                   column_keys_to_look_for,
+                                   columns_traversed,
+                                   viable_paths)
 ```
 
 ```{python}
@@ -369,7 +380,7 @@ def get_query_word_column_locations(query, index_list, word_positions):
 ```
 
 ```{python}
-def find_query_loop(list_of_location_dictionaries, metadata_column_dictionary):
+def find_query_loops(list_of_location_dictionaries, metadata_column_dictionary):
     """
     
     Arguments:
@@ -388,11 +399,8 @@ def find_query_loop(list_of_location_dictionaries, metadata_column_dictionary):
         
         # The locations lists are dictionaries with the column name and position
         locations_to_look_for = list_of_location_dictionaries[query_word_position + 1]
-        #columns_to_look_for = [location["column"] for location in locations_to_look_for]
         columns_to_look_for = locations_to_look_for.keys()    
     
-        #print(this_word_locations)
-        #for each_location in this_word_locations:
         for each_column in this_word_locations.keys():
             traversal_paths = []
 
@@ -469,10 +477,13 @@ looped_row_matrix = add_loop_name_to_first_row_of_matrix(csv_file_path, row_matr
 column_matrix = transpose_matrix(looped_row_matrix)
 
 # Add the next column name to the end of each column
-looped_column_matrix = add_loop_name_to_ends_of_columns_in_matrix(column_matrix)
+#looped_column_matrix = add_loop_name_to_ends_of_columns_in_matrix(column_matrix)
 
-for column in looped_column_matrix:
+for column in column_matrix:
     update_database(column, index_list, word_positions)
+
+# Add the next column name to the end of each column
+looped_column_matrix = add_loop_name_to_ends_of_columns_in_matrix(column_matrix)
 
 metadata_column_matrix = convert_data_matrix_to_metadata_matrix(looped_column_matrix, word_positions)
 metadata_column_dictionary = convert_metadata_matrix_to_dictionary(metadata_column_matrix)
@@ -539,21 +550,22 @@ print(looped_query_locations_list)
 Test file traversal search.
 ```{python}
 first_column = (1,2,3)
-last_column = (1,9)
+last_columns = [(1,9), (1,13)]
 
 result = column_traversal_search(
                                  metadata_column_dictionary,
                                  current_column_key = first_column,
-                                 column_keys_to_look_for = [last_column],
-                                 columns_traversed=[])
+                                 column_keys_to_look_for = last_columns,
+                                 columns_traversed = [],
+                                 viable_paths = [])
 result
 ```
 
 Now that I can see that column traversal search works with the column metadata keys that I have provided I can try implementing it in a more programmatic function that I have already prototyped with `find_query_loop()`.
 
 ## Find loops through columns that connect all query words
-```{python}
-result = find_query_loop(query_locations_list, metadata_column_dictionary)
+```
+result = find_query_loops(query_locations_list, metadata_column_dictionary)
 result
 ```
 
@@ -564,7 +576,7 @@ With valid paths from column to column I need to integrate column position infor
 ### Ranking paths
 One of the challenges that I face is prioritizing results when there are multiple valid loops that connect all of the query words. Because all of the items at the same position in a loop are part of the same "row" they are explicitly connected to each other.
 
-```{python}
+```
 looped_viable_edges = []
 for edge_position, viable_edges in enumerate(result):
     for edge in viable_edges:
@@ -574,12 +586,12 @@ for edge_position, viable_edges in enumerate(result):
 looped_viable_edges
 ```
 
-```{python}
+```
 chosen_edges = choose_loop(looped_viable_edges, previous_node=None)
 chosen_edges
 ```
 
-```{python}
+```
 response_documents = get_response_documents(chosen_edges)
 response_documents
 ```
