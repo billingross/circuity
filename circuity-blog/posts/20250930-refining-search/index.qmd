@@ -1,0 +1,736 @@
+---
+title: "Player database: refining my search algorithm"
+author: "Paul Billing-Ross"
+date: "2025-09-30"
+categories: [player database, design, structure, naming]
+---
+# Introduction
+Now that I have refined the in memory structure of my database I want to revisit my search algorithm and refactor it so that it is more understandable. I previously designed it to interact with database metadata serialized as JSON files. These slow read operations were baked in to my core algorithm which also made it slow and locked me an into an in drive structure.
+
+I am still somewhat confused as to how my search algorithm works because I was trying a bunch of things when I implemented it. I want to pare it back to the bare minimum viability so that I can understand it and then start layering features on top of it.
+
+## Design decisions
+### Where do I store the index?
+Now that I am thinking about search I realize that having all of my columns in the same dictionary would probably make it easier to do column traversal. On second thought, maybe not. The index peforms a special role and for the sake of traversal search I do not ever need to visit the index because the index is for mapping metadata to data and search traversal is simply pattern recognition which can be accomplished with metadata as well as with data.
+
+**Verdict:** Still do not store the index in the `metadata_column_dictionary`.
+
+### How should I store keys in the metadata column dictionary?
+Currently I store them as data strings which is somewhat contrary to my philosophy of only storing data in the index. I think I should also convert them to metadata. How do I store a reference as a key?
+
+The reference is natively stored as a dictionary which I cannot use as a key value. Since all of my metadata references refer to the same index I only need to keep track of the positions which I am storing as a list. I can convert this list of positions to a `tuple` and use that as a key.
+
+And now I am thinking that I should remove the `'column': 'index'` entries from my references from my metadata dictionary since they are redundant. Except what if I want to use different reference materials? I can keep them for now and just do some rejiggering of the search logic.
+
+I am confusing myself by trying to manage my `query_locations` as strings and handle everything else as references. I am going to try converting each word to a reference...
+
+I am doing all of these lookups in the `metadata_column_dictionary` where all of the keys are positions from references. I think that I want to store the column names within my references as index positions rather than strings. I need to update the `convert_string_to_reference()` function to do this.
+
+**Old word locations format**
+```
+[{'column': 'player first name', 'position': 2}]
+```
+
+**New word locations format**
+```
+[{'column': (1,2,3), 'position': 2}]
+```
+
+Instead of using the `get_query_locations()` function I could write a function to convert a string to a list of positions. This would allow me to convert the human language column names in the index to a tuple of the index positions of those words. I could use that tuple to look up the metadata lists associated with that string using the tuple.
+
+So then my workflow would become:
+- Convert each word in my query to a list of locations with human language column names
+- Convert each human language column name to a tuple of the positions of each word in the column name
+- Use the column name positions tuple to look up the column metadata
+
+### How should I model queries?
+My workflow for modelling queries is as follows
+- Convert the string to a list of words
+- Use the `index_dictionary` to look up all of the locations where each word is found
+- Return all of the locations where each word is found  
+
+### How to model references?
+Given that each reference only includes (2) values ("column", "position"), I could just convert each reference to a single item dictionary.
+
+**Old reference structure**
+```
+{'column': 'index', 'position': 0}
+```
+
+**New reference structure**
+The position of the word 'index' in the `index_list` is 0 which is why the key is a tuple with zero.
+```
+{(0): 0}
+```
+
+So then how would I model queries?
+```
+query = "jarrian jones age"
+query_words = ["jarrian", "jones", "age"]
+
+locations = [
+    [{"column": "player first name", "position": 2}],
+    [{"column": "player last name", "position": 2}],
+    [{"column": "player age", "position": 0}]
+]
+
+brief_locations = [
+    [{"player first name": 2}],
+    [{"player last name": 2}],
+    [{"player age": 0}]
+]
+
+metadata_locations = [
+    [{(1,2,3): 2}],
+    [{(1,6,3): 2}],
+    [{(1,13): 0}]
+]
+```
+
+Now that I have my query I need to figure out what I want to do with it.
+```
+column_traversal_search(
+                        metadata_column_dictionary,
+                        current_column_key = (1,2,3),
+                        columns_keys_to_look_for = [(1,6,3)],
+                        columns_traversed=[]
+```
+
+Is there a better moniker that I can use to describe the key for the `metadata_column_dictionary`? I convert the column name to a tuple of the index positions of the words in the column name. Should I just call it an identifier? I could call it a key.
+
+# Methods
+## Load dependencies
+```{python}
+#| code-fold: true
+
+# Manipulate files
+import os
+from pathlib import Path
+# Read comma separated values file
+import csv
+# Manipulate the database structures
+import json
+```
+
+## Functions
+### Import and export functions
+```{python}
+def add_new_word_to_index(word, column_name, position, index_list, word_positions):
+    new_word_locations = [{'column': column_name, 'position': position}]
+    new_index_item = {'word': word, 'locations': new_word_locations}
+
+    word_positions[word] = len(index_list)
+    index_list.append(new_index_item)
+    return index_list
+```
+
+```{python}
+def update_database(column, index_list, word_index_positions):
+    # I will use the column name to add this word location to the index
+    column_name = column[0]
+
+    for position, this_string in enumerate(column):
+        try:
+            number = float(this_string)
+            return number
+        except:
+            this_string_positions = []
+            words = this_string.split(" ")
+    
+        for word in words:
+            # The following line does not work.
+            #print(f"Current index list: {index_list}.")
+            new_word_location = {'column': column_name, 'position': position}
+            word_index_position = word_positions.get(word)
+            if word_index_position:
+                word_locations_dictionary = index_list[word_index_position]
+                # Add new location dictionary to locations list
+                #print(word_locations_dictionary.keys())
+                #word_locations_dictionary['locations'].append(new_word_location)
+                index_list[word_index_position]['locations'].append(new_word_location)
+            else:
+                # I need to add a new item to the index_list
+                index_list = add_new_word_to_index(word, column_name, position, index_list, word_positions)
+```
+
+```{python}
+#| code-fold: true
+def transpose_matrix(matrix):
+    """Transpose a matrix represented as a list of lists.
+
+    Arguments:
+        matrix (list): A list of equal length lists.
+    
+    Returns:
+        (list): A list of lists where all of the values have been transposed.
+    """
+
+    transposed_matrix = [[row[index] for row in row_matrix] for index in range(len(row_matrix[0]))]
+    return transposed_matrix
+```
+
+```{python}
+#| code-fold: true
+def initialize_database():
+    """Generate the index and associated data structures that are at the core of the database.
+    
+    Returns:
+        (list): The primary index of words in the database stored as dictionaries with references to each location of each word in the database.
+        (dict): The primary index represented as a dictionary where the key is the word and the value is a list of locations where that word occurs in the metadata dictionary.
+        (dict): A mapping of each word to its position in the primary index.
+    """
+
+    index_list = [{"word": "index", "locations": [{"column": "index", "position": 0}]}]
+    index_dictionary = {item["word"]: item["locations"] for item in index_list}
+    word_positions = {"index": 0}
+    return {
+            "index_list": index_list, 
+            "index_dictionary": index_dictionary, 
+            "word_positions": word_positions
+    }
+```
+
+```{python}
+#| code-fold: true
+def read_comma_separated_values_file_to_matrix(csv_file):
+    # Read file into a matrix of rows
+    with open(csv_file, 'r') as csv_handle:
+        csv_reader = csv.reader(csv_handle)
+        return [row for row in csv_reader]
+```
+
+```{python}
+#| code-fold: true
+def add_loop_name_to_first_row_of_matrix(csv_file_path, matrix):
+    stem_name = Path(csv_file_path).stem
+    # Treat underscores as spaces
+    stem_words = stem_name.split("_")
+    stem_string = " ".join(stem_words)
+
+    appended_first_row = [" ".join([stem_string, value]) for value in matrix[0]]
+    matrix[0] = appended_first_row
+    return matrix
+```
+
+```{python}
+#| code-fold: true
+def convert_data_matrix_to_metadata_matrix(data_matrix, word_positions):
+#def convert_data_matrix_to_metadata_matrix(data_matrix, index_list, index_dictionary, word_positions):
+    metadata_columns = []
+    for column in data_matrix:
+        metadata_column = []
+        column_name = column[0]
+
+        for position, value in enumerate(column):
+            reference = read_string_to_reference(value, word_positions)
+            #reference = convert_string_to_reference(value, column_name, position, index_list, index_dictionary, word_positions)
+            metadata_column.append(reference)
+        metadata_columns.append(metadata_column)
+    return metadata_columns
+```    
+
+```{python}
+#| code-fold: true
+#def convert_metadata_matrix_to_dictionary(metadata_matrix, index_list):
+def convert_metadata_matrix_to_dictionary(metadata_matrix):
+    dictionary_keys = [tuple(references[0]['positions']) for references in metadata_matrix]
+    metadata_dictionary = dict(zip(dictionary_keys, metadata_matrix))
+    return metadata_dictionary
+```    
+
+```{python}
+#| code-fold: true
+def convert_reference_to_string(reference, index_list):
+    #print(f"Converting reference '{reference}' to string.")
+    if not isinstance(reference, dict):
+        # Numbers stored in metadata files can be returned as is.
+        return reference
+    
+    positions = reference["positions"]
+
+    words = [convert_index_to_word(position, index_list) for position in positions]
+    
+    this_string = (" ").join(words)
+    #print(f"Converted reference {reference} to string {this_string}.")
+    return this_string
+```
+
+```{python}
+#| code-fold: true
+def convert_index_to_word(index, index_list):
+    #print(f"Converting index ({index}) to word.")
+    # The word_dict contains the value of the word as other metadata.
+    word_dict = index_list[index]
+    word = word_dict["word"]
+    #print(f"Converted index ({index}) to word {word}.")
+    return word
+```
+
+```{python}
+#| code-fold: true
+def read_string_to_reference(this_string, word_positions):
+    try:
+        number = float(this_string)
+        return number
+    except:
+        this_string_positions = []
+        words = this_string.split(" ")
+
+    this_string_positions = [read_word_to_index_position(word, word_positions) for word in words] 
+    this_string_reference = {
+                             "column": "index",
+                             "positions": this_string_positions
+    }
+    #print(f"Converted string '{string}' to reference {this_string_reference}.")
+    return this_string_reference
+```
+
+```
+# NOT IN USE
+def import_columnar_matrix_into_database(matrix, loop_name, index_list, index_dictionary, word_positions):
+    for column in matrix:
+        column_name =  [column][0]
+
+        for item in column:
+            try:
+                number = float(string)
+                return number
+            except:
+                words = string.split()
+```
+                
+```
+#| code-fold: true
+def convert_string_to_reference(string, column_name, position, index_list, word_references, word_positions):
+    #print(f"Converting string '{string}' to reference.")
+    # All values can be stored as strings. In order to determine whether
+    # a value contains words or numbers I am going to try converting it
+    # to a float which is a numeric type. If I can convert it to a 
+    # number then I will ignore it.
+    try:
+        number = float(string)
+        return number
+    except:
+        this_string_positions = []
+        words = string.split(" ")
+       
+        conversion_dictionary = {
+                                  "column_name": column_name,
+                                  "position": position,
+                                  "index_list": index_list,
+                                  "index_dictionary": index_dictionary,
+                                  "word_positions": word_positions
+        }  
+        this_string_positions = [convert_word_to_index_position(word, **conversion_dictionary) for word in words] 
+        this_string_reference = {
+                                 "column": "index",
+                                 "positions": this_string_positions
+        }
+        #print(f"Converted string '{string}' to reference {this_string_reference}.")
+        return this_string_reference
+```
+
+```{python}
+#| code-fold: true
+def read_word_to_index_position(word, word_positions):
+    if not isinstance(word, str):
+        return ValueError(f"This word is not of type string: {word}.")
+
+    word_position = word_positions.get(word)
+    if word_position:
+        return word_position
+    else:
+        raise ValueError(f"Could not find word {word} in word_positions: {word_positions}.")
+```
+
+```{python}
+#| code-fold: true
+def convert_word_to_index_position(word, column_name, position, index_list, index_dictionary, word_positions):
+    #print(f"Converting word '{word}' to index position.")
+    if not isinstance(word, str):
+        # I want to convert words to references and leave numbers as they are
+        return ValueError(f"This word is not of type string: {word}.")
+    
+    this_word_locations = index_dictionary.get(word)
+    if this_word_locations:
+        # If the word already exists in the database then get the position of it in the primary index.
+        word_position = word_positions.get(word)
+        if not word_position:
+            return ValueError(f"Word '{word}' was not found in word_positions: {word_positions}.")
+    else:
+        # If the word does not yet exist in the database then add a new word entry to the database
+        word_locations_list = [{"column": column_name, "position": position}]
+        
+        word_position = len(index_list)
+        word_positions[word] = word_position
+        index_list.append({
+                           "word": word,
+                           "locations": [{
+                                           "column": column_name,
+                                           "position": position
+                           }]
+        })
+        index_dictionary[word] = word_locations_list
+    #print(f"Converted word '{word}' to index position {word_position}.")
+    return word_position
+```
+
+```{python}
+#| code-fold: true
+def add_loop_name_to_ends_of_columns_in_matrix(column_matrix):
+    # Add the next column name to the end of each column
+    looped_column_matrix = column_matrix.copy()
+    for current_position, column in enumerate(looped_column_matrix):
+        next_position = current_position + 1
+        if next_position >= len(column_matrix):
+            next_column_name = column_matrix[0][0]
+            column.append(next_column_name)
+        else:
+            next_column_name = column_matrix[current_position + 1][0]
+            column.append(next_column_name)
+    return looped_column_matrix
+```
+
+## Search algorithm
+```{python}
+#| code-fold: true
+def column_traversal_search(metadata_column_dictionary, current_column_key, column_keys_to_look_for, columns_traversed=[]):
+    """Find a path from the current file to one of the ones I am looking for.
+
+    Args:
+        metadata_column_dictionary (dict): A dictionary containing all of the database metadata.
+        current_column_positions (tuple): A tuple listing the index position of each word in the name of the column.
+        columns_to_look_for (list): A list of eligible destination files.
+        columns_traversed (list): A list of the files that have already been traversed during search.
+
+    Returns:
+        columns_traversed (list): Once a destination file has been found this function will return the list of files traversed.
+    """
+    columns_traversed.append(current_column_key)
+    print(f"Current column key: {current_column_key}. "
+          f"Columns to look for: {column_keys_to_look_for}. "
+          f"Columns traversed: {columns_traversed}.")
+    
+    if current_column_key in column_keys_to_look_for:
+        return columns_traversed
+    else:
+        print(f"Metadata column keys: {metadata_column_dictionary.keys()}.")
+        next_column_key = tuple(metadata_column_dictionary[tuple(current_column_key)][-1]['positions'])
+        return column_traversal_search(
+                                       metadata_column_dictionary,
+                                       next_column_key,
+                                       column_keys_to_look_for,
+                                       columns_traversed)
+```
+
+```{python}
+#| code-fold: true
+def convert_string_to_index_positions(this_string, word_positions):
+    return [word_positions.get(word) for word in this_string.split()]
+```
+
+```{python}
+#| code-fold: true
+def get_query_word_column_locations(query, index_list, word_positions):
+    index_dictionary = {item["word"]: item["locations"] for item in index_list}
+    print(f"Index dictionary: {index_dictionary}.")
+    query_words = query.split()
+
+    query_word_location_lists = []
+    for word in query_words:
+        word_locations = index_dictionary.get(word)
+        if not word_locations:
+            raise ValueError(f"No index entry for '{word}'.")
+       
+        # example word location is a list with a dictionary 
+        # [{'column': 'player first name', 'position': 0}]
+       
+        # The structure of each metadata location is in the form of the column metadata key mapped to the position of the word in that column.  
+        word_metadata_locations = {
+            tuple(convert_string_to_index_positions(word_location["column"], word_positions)):
+            word_location["position"]
+            for word_location in word_locations
+        }
+        query_word_location_lists.append(word_metadata_locations)
+    return query_word_location_lists
+```
+
+```{python}
+def find_query_loop(list_of_location_dictionaries, metadata_column_dictionary):
+    """
+    
+    Arguments:
+        list_of_location_dictionaries (list): Column names represented as tuples of the primary indexes of each word in the name of the column.
+        metadata_column_dictionary (dict): A dictionary containing all of the database connections where keys are metadata-translated column keys and values are metadata-translated columns.
+    """
+    # Add the first node to the end of the list to complete the loop
+    #query_word_location_lists.append(query_word_location_lists[0])
+    list_of_location_dictionaries.append(list_of_location_dictionaries[0])
+
+    edges = []
+    for query_word_position, this_word_locations in enumerate(list_of_location_dictionaries):
+        # Break the loop once I reach the end of the list of words
+        if query_word_position >= len(list_of_location_dictionaries) - 1:
+            break
+        
+        # The locations lists are dictionaries with the column name and position
+        locations_to_look_for = list_of_location_dictionaries[query_word_position + 1]
+        #columns_to_look_for = [location["column"] for location in locations_to_look_for]
+        columns_to_look_for = locations_to_look_for.keys()    
+    
+        #print(this_word_locations)
+        #for each_location in this_word_locations:
+        for each_column in this_word_locations.keys():
+            traversal_paths = []
+
+            # Find a path to the next location
+            columns_traversed = column_traversal_search(
+                                                        metadata_column_dictionary,
+                                                        each_column,
+                                                        columns_to_look_for,
+                                                        columns_traversed=[]
+            )
+
+            path_dictionary = {
+                               "start": columns_traversed[0],
+                               "end": columns_traversed[-1],
+                               "columns_traversed": columns_traversed,
+                               "number_of_steps": len(columns_traversed)
+            }
+
+            traversal_paths.append(path_dictionary)
+        edges.append(traversal_paths)
+    return edges
+```
+
+```{python}
+def calculate_edge_score(edge, edge_position, column_position_dictionaries):
+    start_position = column_position_dictionaries[edge_position][tuple(edge['start'])]
+    end_position = column_position_dictionaries[edge_position + 1][tuple(edge['end'])]
+
+    if start_position == 0 or end_position == 0:
+        max_position = max([start_position, end_position])
+        start_position = max_position
+        end_position = max_position
+
+    position_score = abs(start_position - end_position)
+    edge_score = position_score * edge["number_of_steps"]
+    return edge_score
+```
+
+```{python}
+def choose_loop(list_of_viable_edges, previous_node=None):
+    chosen_edges = []
+    for position, viable_edges in enumerate(list_of_viable_edges):
+        if previous_node:
+            matching_viable_edges = [edge for edge in viable_edges if edge['start'] == previous_node]
+        else:
+            matching_viable_edges = viable_edges
+        
+        sorted_viable_edges = sorted(matching_viable_edges, key=lambda edge: edge['score'])
+        chosen_edge = sorted_viable_edges[0]
+        chosen_edges.append(chosen_edge)
+    return chosen_edges
+```
+
+```{python}
+def get_response_documents(edges):
+    response_node_references = []
+    for edge_path in edges:
+        start_node = edge_path["start"]
+        response_node_references.append(start_node)
+    return response_node_references
+```
+
+# Results
+## Initialize and populate database
+```{python}
+csv_file_path = 'player.csv'
+
+database_structures = initialize_database()
+index_list = database_structures["index_list"]
+index_dictionary = database_structures["index_dictionary"]
+word_positions = database_structures["word_positions"]
+
+row_matrix = read_comma_separated_values_file_to_matrix(csv_file_path)
+looped_row_matrix = add_loop_name_to_first_row_of_matrix(csv_file_path, row_matrix)
+column_matrix = transpose_matrix(looped_row_matrix)
+
+# Add the next column name to the end of each column
+looped_column_matrix = add_loop_name_to_ends_of_columns_in_matrix(column_matrix)
+
+#update_database(column, index_list, word_positions) for column in looped_column_matrix)
+index_list_new = index_list.copy()
+for column in looped_column_matrix:
+    update_database(column, index_list_new, word_positions)
+index_list_new
+```
+
+```{python}
+#metadata_column_matrix = convert_data_matrix_to_metadata_matrix(looped_column_matrix, index_list_new, index_dictionary, word_positions)
+metadata_column_matrix = convert_data_matrix_to_metadata_matrix(looped_column_matrix, word_positions)
+#metadata_column_dictionary = convert_metadata_matrix_to_dictionary(metadata_column_matrix, index_list_new)
+metadata_column_dictionary = convert_metadata_matrix_to_dictionary(metadata_column_matrix)
+```
+
+## Fundamental database structures
+### Index list
+The index list stores references to all of the locations where each word is located and is structured as a list so that if I know the position of the word from one of the database metadata files I can easily look it up based on its position in this list.
+```{python}
+index_list
+```
+
+### Index new list
+```{python}
+index_list_new
+```
+
+## Index list generated using new update_database function
+
+### Index dictionary
+The index dictionary stores references to all of the locations where each word is located. It is stored as a dictionary so that I can look up all of the locations of a word by the word itself.
+```{python}
+#index_dictionary
+{item["word"]: item["locations"] for item in index_list_new}
+```
+
+### Word index
+The word index indicates the position of each word within the index list.
+```{python}
+word_positions
+```
+
+### Column matrix
+The column matrix after the next column pointers have been added.
+```{python}
+looped_column_matrix
+```
+
+### Metadata matrix
+```{python}
+metadata_column_matrix
+```
+
+### Metadata dictionary
+The metadata dictionary is a new structure that I added in the last post.
+```{python}
+metadata_column_dictionary
+```
+
+## Search algorithm
+Process query
+```{python}
+query = 'jarrian jones age'
+
+query_locations_list = get_query_word_column_locations(query, index_list_new, word_positions)
+query_locations_list
+```
+Now I have (1) list containing (3) dictionaries; one for each of the words in my query. Each dictionary contains a set of key:value pairs where each key describes the name of a column in the database and each value indicates the position that the query word occurs at in that column.
+
+Now that I have my query location lists the next thing that I want to do is a column traversal search to find loops that connect all of these words. In order to find a loop I only need to check whether I can get from the column of one query word to the next. Because of that I do not need to use the column positions that are stored in the values of my dictionaries. I can simply use the keys.
+
+```
+[{(1, 2, 3): 2}, {(1, 6, 3): 2}, {(1, 9): 3}]
+```
+
+Another value of having the column names in this metadata format is that it is simpatico with the structure of the `metadata_column_dictionary` which contains all of the database connections that I will use for graph traversal.
+
+```
+looped_query_locations_list = query_locations_list.copy()
+looped_query_locations_list.append(looped_query_locations_list[0])
+print(looped_query_locations_list)
+```
+
+Test file traversal search.
+```
+first_column = (14,15,16)
+last_column = (14,22)
+
+result = column_traversal_search(
+                                 metadata_column_dictionary,
+                                 current_column_key = first_column,
+                                 column_keys_to_look_for = [last_column],
+                                 columns_traversed=[])
+result
+```
+
+Now that I can see that column traversal search works with the column metadata keys that I have provided I can try implementing it in a more programmatic function that I have already prototyped with `find_query_loop()`.
+
+## Find loops through columns that connect all query words
+```
+result = find_query_loop(query_locations_list, metadata_column_dictionary)
+result
+```
+
+And now I have (1) list of (3) subordinate lists where each subordinate list contains valid paths from the word at the same position to the next one. So the first subordinate list contains valid paths from the first word to the second and the third and last subordinate list contains valid paths from the last word in the query to the first.
+
+With valid paths from column to column I need to integrate column position information in order to figure out which column element to return in the query response.
+
+### Ranking paths
+One of the challenges that I face is prioritizing results when there are multiple valid loops that connect all of the query words. Because all of the items at the same position in a loop are part of the same "row" they are explicitly connected to each other.
+
+```
+looped_viable_edges = []
+for edge_position, viable_edges in enumerate(result):
+    for edge in viable_edges:
+        edge_score = calculate_edge_score(edge, edge_position, looped_query_locations_list)
+        edge['score'] = edge_score
+    looped_viable_edges.append(viable_edges)
+looped_viable_edges
+```
+
+```
+chosen_edges = choose_loop(looped_viable_edges, previous_node=None)
+chosen_edges
+```
+
+```
+response_documents = get_response_documents(chosen_edges)
+response_documents
+```
+Now I have the documents that contain the results that I am looking for. In order to generate a response I also need the positions of the original query words in those documents. For locations with a non-zero position this is trivial because I can retain the original position. Locations with a zero value I treat as variables because they refer to entire columns rather than specific entries.
+
+In the case of variables I want to infer the appropriate row to return a value from by looking at the rows of the surrounding words. For instance if I query "jarrian jones age" and age is at the zero position then I would want to look at which positions "jones" and "jarrian" are in because they are the adjacent words when I consider this query as a loop. If those adjacent words occupy different rows then I can decide which one to prioritize and return both results. I will probably prioritize the row of the previous word over the next word.
+
+```
+def get_previous_position(current_position, query_locations_lists):
+    if current_position == 0:
+        # If the current document is the first in the loop then the previous document is the last.
+        previous_position = -1
+    else:
+        previous_position = current_position - 1
+    return previous_position
+```
+
+```
+def get_next_position(current_position, query_locations_lists):
+    if current_position == len(query_locations_lists) - 1:
+        # If the current document is the last in the loop then the next document is the first.
+        next_position = 0
+    else:
+        next_position = current_position + 1
+    return next_position
+```
+
+```
+def assign_document_positions(response_documents, query_locations_lists):
+    for query_position, document in enumerate(response_documents):
+        
+        previous_position = get_previous_position(query_position, query_locations_lists)
+        next_position = get_next_position(query_position, query_locations_lists)
+```
+
+### Dealing with duplicates
+Another challenge is that column names contain multiple words and I only want to return a single value per column. For instance if I queried "jones first name" I would want to get back "jones jarrian"rather than "jones jarrian jarrian" because the words "first" and "name" both match the column titled "player first name" and I want to avoid returning duplicates. And that can be something I deal with later because duplicates are acceptable to me as long as they do contain the information I desire.
+
+```
+response_locations = []
+for position, document in enumerate(response_documents):
+    query_positions_dictionary = query_locations_list[position]
+    response_location = query_positions_dictionary[document]
+
+    # If the word is in the title of the column then I treat it as a variable and get the position of the neighboring word
+    if response_location == 0:
+        # TODO: finish this
+        #response_location
+```
