@@ -1,7 +1,7 @@
 ---
 title: "Player database: refining my search algorithm"
 author: "Paul Billing-Ross"
-date: "2025-09-30"
+date: "2025-10-06"
 categories: [player database, design, structure, naming]
 ---
 # Introduction
@@ -103,6 +103,9 @@ Is there a better moniker that I can use to describe the key for the `metadata_c
 ```{python}
 #| code-fold: true
 
+# Logging
+import logging
+
 # Manipulate files
 import os
 from pathlib import Path
@@ -110,19 +113,57 @@ from pathlib import Path
 import csv
 # Manipulate the database structures
 import json
+
+# Manipulate lists
+import itertools
+from operator import itemgetter
 ```
 
 ## Functions
 ### Import and export functions
 ```{python}
 def add_new_word_to_index(word, column_name, position, index_list, word_positions):
-    new_word_locations = [{'column': column_name, 'position': position}]
+    new_word_locations = {column_name: [position]}
     new_index_item = {'word': word, 'locations': new_word_locations}
 
     word_positions[word] = len(index_list)
     index_list.append(new_index_item)
     return index_list
 ```
+
+```{python}
+def update_index(column, index_list, word_index_positions):
+    column_name = column[0]
+
+    column_position_dictionary = {}
+    for position, this_string in enumerate(column):
+        try:
+            number = float(this_string)
+            continue
+        except:
+            words = this_string.split(" ")
+
+        for word in words:
+            word_index_position = word_positions.get(word)
+            if word_index_position:
+                # This word has already been added to the index
+                word_index_entry = index_list[word_index_position]
+                print(f"Word index entry: {word_index_entry}.")
+                word_locations = word_index_entry['locations']
+                this_column_positions = word_locations.get(column_name)
+                if this_column_positions:
+                    # This column has already been added to the locations for this word
+                    print(f"Column name: {column_name}, this column positions: {this_column_positions}")
+                    this_column_positions.append(position)
+                    # Convert the list to a set to get unique values
+                    word_locations[column_name] = list(set(this_column_positions))
+                else:
+                    # I need to add this column added to locations
+                    word_locations[column_name] = [position]
+            else:
+                # I need to add this word to the index
+                index_list = add_new_word_to_index(word, column_name, position, index_list, word_positions)
+```         
 
 ```{python}
 def update_database(column, index_list, word_index_positions):
@@ -175,7 +216,7 @@ def initialize_database():
         (dict): A mapping of each word to its position in the primary index.
     """
 
-    index_list = [{"word": "index", "locations": [{"column": "index", "position": 0}]}]
+    index_list = [{"word": "index", "locations": {"index": [0]}}]
     word_positions = {"index": 0}
     return {
             "index_list": index_list, 
@@ -228,7 +269,7 @@ def convert_metadata_matrix_to_dictionary(metadata_matrix):
     return metadata_dictionary
 ```    
 
-```{python}
+```
 #| code-fold: true
 def convert_reference_to_string(reference, index_list):
     #print(f"Converting reference '{reference}' to string.")
@@ -245,7 +286,7 @@ def convert_reference_to_string(reference, index_list):
     return this_string
 ```
 
-```{python}
+```
 #| code-fold: true
 def convert_index_to_word(index, index_list):
     #print(f"Converting index ({index}) to word.")
@@ -306,8 +347,23 @@ def add_loop_name_to_ends_of_columns_in_matrix(column_matrix):
 
 ## Search algorithm
 ```{python}
+def get_columns_in_loop(metadata_column_dictionary, current_column_key, columns_traversed=[]):
+    if current_column_key in columns_traversed:
+        return columns_traversed
+
+    columns_traversed.append(current_column_key)
+    current_column = metadata_column_dictionary[current_column_key]
+
+    next_column_key = tuple(current_column[-1]['positions'])
+    return get_columns_in_loop(
+                               metadata_column_dictionary,
+                               next_column_key,
+                               columns_traversed)
+```
+
+```{python}
 #| code-fold: true
-def column_traversal_search(metadata_column_dictionary, current_column_key, column_keys_to_look_for, columns_traversed=[], viable_paths=[]):
+def column_traversal_search(metadata_column_dictionary, current_column_key, column_keys_to_look_for, columns_traversed=[], viable_paths={}):
     """Find all viable paths from the current column to the ones I am looking for.
 
     Args:
@@ -320,20 +376,53 @@ def column_traversal_search(metadata_column_dictionary, current_column_key, colu
         columns_traversed (list): Once a destination file has been found this function will return the list of files traversed.
     """
     if current_column_key in columns_traversed:
-        print(f"Completed a loop and returning results. Current column key: {current_column_key}, columns traversed: {columns_traversed}.")
+        #print(f"Completed a loop and returning results. Current column key: {current_column_key}, columns traversed: {columns_traversed}.")
         # Return all viable paths once I complete a loop
         return viable_paths
 
     columns_traversed.append(current_column_key)
-    print(f"Current column key: {current_column_key}. "
-          f"Columns to look for: {column_keys_to_look_for}. "
-          f"Columns traversed: {columns_traversed}."
-          f"Viable paths: {viable_paths}.")
+    #print(f"Current column key: {current_column_key}. "
+    #      f"Columns to look for: {column_keys_to_look_for}. "
+    #      f"Columns traversed: {columns_traversed}."
+    #      f"Viable paths: {viable_paths}.")
 
     # Add the current path to the list of viable paths 
     if current_column_key in column_keys_to_look_for:
-        viable_paths.append(columns_traversed.copy())
-        print(f"Added viable path: {viable_paths}.")
+        #viable_paths.append(columns_traversed.copy())
+        viable_paths[current_column_key] = columns_traversed.copy()
+        #print(f"Added viable path. {current_column_key}: {viable_paths[current_column_key]}.")
+    
+    current_column= metadata_column_dictionary[current_column_key]
+    # I need to convert the list of index positions into a tuple so that
+    # I can use it as a dictionary key.
+    next_column_key = tuple(current_column[-1]['positions'])
+    return column_traversal_search(
+                                   metadata_column_dictionary,
+                                   next_column_key,
+                                   column_keys_to_look_for,
+                                   columns_traversed,
+                                   viable_paths)
+```
+
+```{python}
+#| code-fold: true
+def location_traversal_search(metadata_column_dictionary, current_location, locations_to_look_for, locations_traversed=[], viable_paths={}):
+    column_key = current_location    
+
+    if current_location in locations_traversed:
+        return viable_paths
+
+    columns_traversed.append(current_column_key)
+    #print(f"Current column key: {current_column_key}. "
+    #      f"Columns to look for: {column_keys_to_look_for}. "
+    #      f"Columns traversed: {columns_traversed}."
+    #      f"Viable paths: {viable_paths}.")
+
+    # Add the current path to the list of viable paths 
+    if current_column_key in column_keys_to_look_for:
+        #viable_paths.append(columns_traversed.copy())
+        viable_paths[current_column_key] = columns_traversed.copy()
+        #print(f"Added viable path. {current_column_key}: {viable_paths[current_column_key]}.")
     
     current_column= metadata_column_dictionary[current_column_key]
     # I need to convert the list of index positions into a tuple so that
@@ -350,14 +439,18 @@ def column_traversal_search(metadata_column_dictionary, current_column_key, colu
 ```{python}
 #| code-fold: true
 def convert_string_to_index_positions(this_string, word_positions):
+    if not isinstance(this_string, str):
+        raise ValueError(f"This {this_string} needs to be a string.")
     return [word_positions.get(word) for word in this_string.split()]
 ```
 
 ```{python}
 #| code-fold: true
 def get_query_word_column_locations(query, index_list, word_positions):
+    # Constitute an index dictionary
     index_dictionary = {item["word"]: item["locations"] for item in index_list}
     print(f"Index dictionary: {index_dictionary}.")
+    
     query_words = query.split()
 
     query_word_location_lists = []
@@ -366,19 +459,129 @@ def get_query_word_column_locations(query, index_list, word_positions):
         if not word_locations:
             raise ValueError(f"No index entry for '{word}'.")
        
-        # example word location is a list with a dictionary 
-        # [{'column': 'player first name', 'position': 0}]
-       
-        # The structure of each metadata location is in the form of the column metadata key mapped to the position of the word in that column.  
-        word_metadata_locations = {
-            tuple(convert_string_to_index_positions(word_location["column"], word_positions)):
-            word_location["position"]
-            for word_location in word_locations
+        print(f"Word locations: {word_locations}.")
+        # Example location{'player first name': [0]}       
+
+        # Convert column names to index positions
+        metadata_word_locations = []
+        for column_name, positions in word_locations.items():
+            metadata_column_locations = {
+                "column": tuple(convert_string_to_index_positions(column_name, word_positions)),
+                "positions": positions
+            }
+            metadata_word_locations.append(metadata_column_locations)        
+ 
+        """
+        metadata_word_locations = {
+            convert_string_to_index_positions(column_name, word_positions):
+            positions
+            for column_name, positions in word_locations.items()
         }
-        query_word_location_lists.append(word_metadata_locations)
+        """
+        query_word_location_lists.append(metadata_word_locations)
+        print(f"Query word location lists: {query_word_location_lists}.")
     return query_word_location_lists
 ```
 
+```{python}
+def calculate_positions_score(first_position, second_position):
+    if first_position == second_position:
+        return 1
+    else:
+        return -1
+```
+
+```{python}
+def find_query_loops_too(metadata_column_dictionary, query_word_location_list):
+    """
+    Arguments:
+        metadata_column_dictionary (dict): A dictionary of the database represented as references to the index.
+        query_word_location_lists (list): A list of lists of locations where each word in the query can be found. Each inner list corresponds to the word in the query at the same position.
+    """
+    query_word_locations_list.append(query_word_location_list[0])
+
+    edges_list = []
+    for query_word_position, query_word_locations in enumerate(query_word_location_list):
+        if query_word_position >= len(query_word_location_list) - 1:
+            break
+        
+        for current_location in query_word_locations:
+            print(f"Current location: {current_location}.")
+
+            current_column = current_location["column"]
+            # Use this list to filter locations of the next query word
+            columns_in_loop = get_columns_in_loop(
+                                                  metadata_column_dictionary,
+                                                  current_column,
+                                                  columns_traversed=[])
+            
+
+            current_positions = current_location["positions"]
+
+            # Create a list of locations that can be found on this loop.
+            # Location format: {"column": (1), "positions": [1]}
+            next_locations = query_word_locations_list[query_word_position + 1]
+            next_viable_locations = [
+                                     location for location
+                                     in next_locations
+                                     if location["column"] in columns_in_loop]
+            print(f"Next viable locations: {next_viable_locations}.")
+            
+            # What if a location points to the column name? The positions are effectively wildcards.
+            # reference: https://stackoverflow.com/a/58265773
+            [location.update(positions=current_positions) for location in next_viable_locations if location['positions']==[0]]
+            print(f"Next wildcard locations: {next_viable_locations}.")
+
+            
+            # Maybe I should expand my locations. Currently I support multiple positions
+            # per column. I can create separate items for all of those.
+            start_pointers = [
+                              (current_location["column"], position)
+                              for position in current_location["positions"]
+            ]
+            print(f"Start pointers: {start_pointers}.")
+
+            end_pointers = []
+            for location in next_viable_locations:
+                for position in location['positions']:
+                    end_pointers.append((location["column"], position))
+            print(f"End pointers: {end_pointers}.")
+
+            endpoint_pairs = list(itertools.product(start_pointers, end_pointers))
+            print(f"Endpoint pairs: {endpoint_pairs}.")
+
+            endpoint_scores = [
+                               calculate_positions_score(endpoints[0][1], endpoints[1][1])
+                               for endpoints in endpoint_pairs]
+            print(f"Endpoint scores: {endpoint_scores}.")
+            max_endpoints_score = max(endpoint_scores)            
+
+            scored_endpoints = zip(endpoint_pairs, endpoint_scores)
+            max_score_endpoints = [
+                                   endpoints for endpoints
+                                   in scored_endpoints
+                                   if endpoints[1] == max_endpoints_score]
+            print(f"Max score endpoints: {max_score_endpoints}.")
+
+            # Generate a list of viable edges
+            max_score_edges = []
+            for endpoints in max_score_endpoints:
+                metadata_values = endpoints[0]
+                score = endpoints[1]        
+        
+                start_reference = metadata_values[0]
+                end_reference = metadata_values[1]
+                
+                edge_dictionary = {
+                                   "start": start_reference,
+                                   "end": end_reference,
+                                   "score": score
+                }
+                max_score_edges.append(edge_dictionary)
+            edges_list.append(max_score_edges)
+    return edges_list
+```
+            
 ```{python}
 def find_query_loops(list_of_location_dictionaries, metadata_column_dictionary):
     """
@@ -388,10 +591,10 @@ def find_query_loops(list_of_location_dictionaries, metadata_column_dictionary):
         metadata_column_dictionary (dict): A dictionary containing all of the database connections where keys are metadata-translated column keys and values are metadata-translated columns.
     """
     # Add the first node to the end of the list to complete the loop
-    #query_word_location_lists.append(query_word_location_lists[0])
     list_of_location_dictionaries.append(list_of_location_dictionaries[0])
 
     edges = []
+    #edges = {}
     for query_word_position, this_word_locations in enumerate(list_of_location_dictionaries):
         # Break the loop once I reach the end of the list of words
         if query_word_position >= len(list_of_location_dictionaries) - 1:
@@ -401,26 +604,32 @@ def find_query_loops(list_of_location_dictionaries, metadata_column_dictionary):
         locations_to_look_for = list_of_location_dictionaries[query_word_position + 1]
         columns_to_look_for = locations_to_look_for.keys()    
     
-        for each_column in this_word_locations.keys():
-            traversal_paths = []
+        traversal_paths = []
+        for this_column in this_word_locations.keys():
+            #traversal_paths = []
 
             # Find a path to the next location
-            columns_traversed = column_traversal_search(
-                                                        metadata_column_dictionary,
-                                                        each_column,
-                                                        columns_to_look_for,
-                                                        columns_traversed=[]
+            viable_paths = column_traversal_search(
+                                                   metadata_column_dictionary,
+                                                   this_column,
+                                                   columns_to_look_for,
+                                                   columns_traversed=[],
+                                                   viable_paths={}
             )
-
-            path_dictionary = {
-                               "start": columns_traversed[0],
-                               "end": columns_traversed[-1],
-                               "columns_traversed": columns_traversed,
-                               "number_of_steps": len(columns_traversed)
-            }
-
-            traversal_paths.append(path_dictionary)
-        edges.append(traversal_paths)
+            print(f"Viable paths from column {this_column} to columns {columns_to_look_for}: {viable_paths}.")
+            traversal_paths.append(viable_paths)
+            for viable_path in viable_paths.values():
+                path_dictionary = {
+                                   "start": viable_path[0],
+                                   "end": viable_path[-1],
+                                   "columns_traversed": viable_path,
+                                   "number_of_steps": len(viable_path)
+                }
+                edges.append(path_dictionary)
+                #traversal_paths.append(path_dictionary)
+        #edges.append(traversal_paths)
+        
+        #edges[this_column] = traversal_paths
     return edges
 ```
 
@@ -480,7 +689,8 @@ column_matrix = transpose_matrix(looped_row_matrix)
 #looped_column_matrix = add_loop_name_to_ends_of_columns_in_matrix(column_matrix)
 
 for column in column_matrix:
-    update_database(column, index_list, word_positions)
+    #update_database(column, index_list, word_positions)
+    update_index(column, index_list, word_positions)    
 
 # Add the next column name to the end of each column
 looped_column_matrix = add_loop_name_to_ends_of_columns_in_matrix(column_matrix)
@@ -528,12 +738,19 @@ metadata_column_dictionary
 ```
 
 ## Search algorithm
+```{python}
+query = 'justin'
+
+query_locations_list = get_query_word_column_locations(query, index_list, word_positions)
+query_locations_list
+```
+
 Process query
 ```{python}
 query = 'jarrian jones age'
 
-query_locations_list = get_query_word_column_locations(query, index_list, word_positions)
-query_locations_list
+query_word_locations_list = get_query_word_column_locations(query, index_list, word_positions)
+query_word_locations_list
 ```
 Now I have (1) list containing (3) dictionaries; one for each of the words in my query. Each dictionary contains a set of key:value pairs where each key describes the name of a column in the database and each value indicates the position that the query word occurs at in that column.
 
@@ -547,7 +764,7 @@ looped_query_locations_list.append(looped_query_locations_list[0])
 print(looped_query_locations_list)
 ```
 
-Test file traversal search.
+Test column traversal search.
 ```{python}
 first_column = (1,2,3)
 last_columns = [(1,9), (1,13)]
@@ -557,16 +774,31 @@ result = column_traversal_search(
                                  current_column_key = first_column,
                                  column_keys_to_look_for = last_columns,
                                  columns_traversed = [],
-                                 viable_paths = [])
+                                 viable_paths = {})
 result
 ```
+I was thinking that I needed to change `column_traversal_search()` to `location_traversal_search()` and now that I realize that I am only going to use it for filtering I think I can leave it as is. For the sake of this case I do not think I even need to do a _search_ per se because I only have a single loop. I can simply get all of the columns that are in the same loop as the current column and return that list to use for filtering. That way all results need to be on the same loop. And I can figure out how to handle additional loops once I reach that point. 
 
 Now that I can see that column traversal search works with the column metadata keys that I have provided I can try implementing it in a more programmatic function that I have already prototyped with `find_query_loop()`.
 
-## Find loops through columns that connect all query words
+## Get columns in loop
+```{python}
+current_column = (1,6,3)
+columns_in_loop = get_columns_in_loop(
+                                      metadata_column_dictionary,
+                                      current_column,
+                                      columns_traversed=[])
+columns_in_loop
 ```
-result = find_query_loops(query_locations_list, metadata_column_dictionary)
-result
+
+## Find loops through columns that connect all query words
+```{python}
+find_query_loops_too(metadata_column_dictionary, query_word_locations_list)
+```
+
+```
+edges = find_query_loops(query_locations_list, metadata_column_dictionary)
+edges
 ```
 
 And now I have (1) list of (3) subordinate lists where each subordinate list contains valid paths from the word at the same position to the next one. So the first subordinate list contains valid paths from the first word to the second and the third and last subordinate list contains valid paths from the last word in the query to the first.
@@ -576,9 +808,16 @@ With valid paths from column to column I need to integrate column position infor
 ### Ranking paths
 One of the challenges that I face is prioritizing results when there are multiple valid loops that connect all of the query words. Because all of the items at the same position in a loop are part of the same "row" they are explicitly connected to each other.
 
+### How do I want to organize edges
+An edge has a start document and an end document and an inclusive list of all the documents connecting them. I want to assign a score to each of those paths so that I can choose the most efficient ones.
+
+```
+[{start: document, end: document, path: [documents], score: integer}]
+```
+
 ```
 looped_viable_edges = []
-for edge_position, viable_edges in enumerate(result):
+for edge_position, viable_edges in enumerate(edges):
     for edge in viable_edges:
         edge_score = calculate_edge_score(edge, edge_position, looped_query_locations_list)
         edge['score'] = edge_score
