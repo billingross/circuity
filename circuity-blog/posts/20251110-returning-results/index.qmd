@@ -1,0 +1,754 @@
+---
+title: "Player database: returning results"
+author: "Paul Billing-Ross"
+date: "2025-11-10"
+categories: [player database, reverse lookup]
+---
+# Introduction
+Once I have retrieved the loops that represent viable query results I need to turn the metadata references to words back into actual data. This involves doing a reverse lookup of the words in the index from the location references stored in the loops.
+
+# Functions
+## Load dependencies
+```{python}
+#| code-fold: true
+
+# Logging
+import logging
+
+# Manipulate files
+import os
+from pathlib import Path
+# Read comma separated values file
+import csv
+# Manipulate the database structures
+import json
+
+# Manipulate lists
+import random
+import itertools
+from operator import itemgetter
+```
+
+## Import and export functions
+```{python}
+#| code-fold: true
+def add_new_word_to_index(word, column_name, position, index_list, word_positions):
+    new_word_locations = {column_name: [position]}
+    new_index_item = {'word': word, 'locations': new_word_locations}
+
+    word_positions[word] = len(index_list)
+    index_list.append(new_index_item)
+    return index_list
+```
+
+```{python}
+#| code-fold: true
+def update_index(column, index_list, word_index_positions):
+    column_name = column[0]
+
+    column_position_dictionary = {}
+    for position, this_string in enumerate(column):
+        try:
+            number = float(this_string)
+            continue
+        except:
+            words = this_string.split(" ")
+
+        for word in words:
+            word_index_position = word_positions.get(word)
+            if word_index_position:
+                # This word has already been added to the index
+                word_index_entry = index_list[word_index_position]
+                print(f"Word index entry: {word_index_entry}.")
+                word_locations = word_index_entry['locations']
+                this_column_positions = word_locations.get(column_name)
+                if this_column_positions:
+                    # This column has already been added to the locations for this word
+                    print(f"Column name: {column_name}, this column positions: {this_column_positions}")
+                    this_column_positions.append(position)
+                    # Convert the list to a set to get unique values
+                    word_locations[column_name] = list(set(this_column_positions))
+                else:
+                    # I need to add this column added to locations
+                    word_locations[column_name] = [position]
+            else:
+                # I need to add this word to the index
+                index_list = add_new_word_to_index(word, column_name, position, index_list, word_positions)
+```         
+
+```{python}
+#| code-fold: true
+def update_database(column, index_list, word_index_positions):
+    # I will use the column name to add this word location to the index
+    column_name = column[0]
+
+    for position, this_string in enumerate(column):
+        try:
+            number = float(this_string)
+            return number
+        except:
+            this_string_positions = []
+            words = this_string.split(" ")
+    
+        for word in words:
+            new_word_location = {'column': column_name, 'position': position}
+            word_index_position = word_positions.get(word)
+            if word_index_position:
+                # Add new location dictionary to locations list
+                index_list[word_index_position]['locations'].append(new_word_location)
+            else:
+                # Add this word as a new item in the index_list
+                index_list = add_new_word_to_index(word, column_name, position, index_list, word_positions)
+```
+
+```{python}
+#| code-fold: true
+def transpose_matrix(matrix):
+    """Transpose a matrix represented as a list of lists.
+
+    Arguments:
+        matrix (list): A list of equal length lists.
+    
+    Returns:
+        (list): A list of lists where all of the values have been transposed.
+    """
+
+    transposed_matrix = [[row[index] for row in matrix] for index in range(len(matrix[0]))]
+    return transposed_matrix
+```
+
+```{python}
+#| code-fold: true
+def initialize_database():
+    """Generate the index and associated data structures that are at the core of the database.
+    
+    Returns:
+        (list): The primary index of words in the database stored as dictionaries with references to each location of each word in the database.
+        (dict): The primary index represented as a dictionary where the key is the word and the value is a list of locations where that word occurs in the metadata dictionary.
+        (dict): A mapping of each word to its position in the primary index.
+    """
+
+    index_list = [{"word": "index", "locations": {"index": [0]}}]
+    word_positions = {"index": 0}
+    return {
+            "index_list": index_list, 
+            "word_positions": word_positions
+    }
+```
+
+```{python}
+#| code-fold: true
+def read_comma_separated_values_file_to_matrix(csv_file):
+    # Read file into a matrix of rows
+    with open(csv_file, 'r') as csv_handle:
+        csv_reader = csv.reader(csv_handle)
+        return [row for row in csv_reader]
+```
+
+```{python}
+#| code-fold: true
+def add_loop_name_to_first_row_of_matrix(csv_file_path, matrix):
+    stem_name = Path(csv_file_path).stem
+    # Treat underscores as spaces
+    stem_words = stem_name.split("_")
+    stem_string = " ".join(stem_words)
+
+    appended_first_row = [" ".join([stem_string, value]) for value in matrix[0]]
+    matrix[0] = appended_first_row
+    return matrix
+```
+
+```{python}
+#| code-fold: true
+def convert_data_matrix_to_metadata_matrix(data_matrix, word_positions):
+    metadata_columns = []
+    for column in data_matrix:
+        metadata_column = []
+        column_name = column[0]
+
+        for position, value in enumerate(column):
+            reference = read_string_to_reference(value, word_positions)
+            metadata_column.append(reference)
+        metadata_columns.append(metadata_column)
+    return metadata_columns
+```    
+
+```{python}
+#| code-fold: true
+def convert_metadata_matrix_to_dictionary(metadata_matrix):
+    dictionary_keys = [tuple(references[0]['positions']) for references in metadata_matrix]
+    metadata_dictionary = dict(zip(dictionary_keys, metadata_matrix))
+    return metadata_dictionary
+```    
+
+```{python}
+#| code-fold: true
+def read_string_to_reference(this_string, word_positions):
+    try:
+        number = float(this_string)
+        return number
+    except:
+        this_string_positions = []
+        words = this_string.split(" ")
+
+    this_string_positions = [read_word_to_index_position(word, word_positions) for word in words] 
+    this_string_reference = {
+                             "column": "index",
+                             "positions": this_string_positions
+    }
+    #print(f"Converted string '{string}' to reference {this_string_reference}.")
+    return this_string_reference
+```
+
+```{python}
+#| code-fold: true
+def read_word_to_index_position(word, word_positions):
+    if not isinstance(word, str):
+        return ValueError(f"This word is not of type string: {word}.")
+
+    word_position = word_positions.get(word)
+    if word_position:
+        return word_position
+    else:
+        raise ValueError(f"Could not find word {word} in word_positions: {word_positions}.")
+```
+
+```{python}
+#| code-fold: true
+def add_loop_name_to_ends_of_columns_in_matrix(column_matrix):
+    # Add the next column name to the end of each column
+    looped_column_matrix = column_matrix.copy()
+    for current_position, column in enumerate(looped_column_matrix):
+        next_position = current_position + 1
+        if next_position >= len(column_matrix):
+            next_column_name = column_matrix[0][0]
+            column.append(next_column_name)
+        else:
+            next_column_name = column_matrix[current_position + 1][0]
+            column.append(next_column_name)
+    return looped_column_matrix
+```
+
+## Search algorithm
+```{python}
+#| code-fold: true
+def get_columns_in_loop(metadata_column_dictionary, current_column_key, columns_traversed=[]):
+    if current_column_key in columns_traversed:
+        return columns_traversed
+
+    columns_traversed.append(current_column_key)
+    current_column = metadata_column_dictionary[current_column_key]
+
+    next_column_key = tuple(current_column[-1]['positions'])
+    return get_columns_in_loop(
+                               metadata_column_dictionary,
+                               next_column_key,
+                               columns_traversed)
+```
+
+```{python}
+#| code-fold: true
+def column_traversal_search(metadata_column_dictionary, current_column_key, column_keys_to_look_for, columns_traversed=[], viable_paths={}):
+    """Find all viable paths from the current column to the ones I am looking for.
+
+    Args:
+        metadata_column_dictionary (dict): A dictionary containing all of the database metadata.
+        current_column_positions (tuple): A tuple listing the index position of each word in the name of the column.
+        columns_to_look_for (list): A list of eligible destination files.
+        columns_traversed (list): A list of the files that have already been traversed during search.
+
+    Returns:
+        columns_traversed (list): Once a destination file has been found this function will return the list of files traversed.
+    """
+    if current_column_key in columns_traversed:
+        #print(f"Completed a loop and returning results. Current column key: {current_column_key}, columns traversed: {columns_traversed}.")
+        # Return all viable paths once I complete a loop
+        return viable_paths
+
+    columns_traversed.append(current_column_key)
+    #print(f"Current column key: {current_column_key}. "
+    #      f"Columns to look for: {column_keys_to_look_for}. "
+    #      f"Columns traversed: {columns_traversed}."
+    #      f"Viable paths: {viable_paths}.")
+
+    # Add the current path to the list of viable paths 
+    if current_column_key in column_keys_to_look_for:
+        #viable_paths.append(columns_traversed.copy())
+        viable_paths[current_column_key] = columns_traversed.copy()
+        #print(f"Added viable path. {current_column_key}: {viable_paths[current_column_key]}.")
+    
+    current_column= metadata_column_dictionary[current_column_key]
+    # I need to convert the list of index positions into a tuple so that
+    # I can use it as a dictionary key.
+    next_column_key = tuple(current_column[-1]['positions'])
+    return column_traversal_search(
+                                   metadata_column_dictionary,
+                                   next_column_key,
+                                   column_keys_to_look_for,
+                                   columns_traversed,
+                                   viable_paths)
+```
+
+```{python}
+#| code-fold: true
+def convert_string_to_index_positions(this_string, word_positions):
+    if not isinstance(this_string, str):
+        raise ValueError(f"This {this_string} needs to be a string.")
+    return [word_positions.get(word) for word in this_string.split()]
+```
+
+```{python}
+#| code-fold: true
+def get_query_word_column_locations(query, index_list, word_positions):
+    # Constitute an index dictionary
+    index_dictionary = {item["word"]: item["locations"] for item in index_list}
+    print(f"Index dictionary: {index_dictionary}.")
+    
+    query_words = query.split()
+
+    query_word_location_lists = []
+    for word in query_words:
+        word_locations = index_dictionary.get(word)
+        if not word_locations:
+            raise ValueError(f"No index entry for '{word}'.")
+       
+        print(f"Word locations: {word_locations}.")
+        # Example location{'player first name': [0]}       
+
+        # Convert column names to index positions
+        metadata_word_locations = []
+        for column_name, positions in word_locations.items():
+            metadata_column_locations = {
+                "column": tuple(convert_string_to_index_positions(column_name, word_positions)),
+                "positions": positions
+            }
+            metadata_word_locations.append(metadata_column_locations)        
+ 
+        """
+        metadata_word_locations = {
+            convert_string_to_index_positions(column_name, word_positions):
+            positions
+            for column_name, positions in word_locations.items()
+        }
+        """
+        query_word_location_lists.append(metadata_word_locations)
+        print(f"Query word location lists: {query_word_location_lists}.")
+    return query_word_location_lists
+```
+
+```{python}
+#| code-fold: true
+def calculate_positions_score(first_position, second_position):
+    if first_position == second_position:
+        return 1
+    else:
+        return -1
+```
+
+```{python}
+#| code-fold: true
+def find_query_loops(metadata_column_dictionary, looped_query_word_locations):
+    """
+    Arguments:
+        metadata_column_dictionary (dict): A dictionary of the database represented as references to the index.
+        query_word_locations_lists (list): A list of lists of locations where each word in the query can be found. Each inner list corresponds to the word in the query at the same position.
+    """
+    edges_list = []
+    for query_word_position, query_word_locations in enumerate(looped_query_word_locations):
+        if query_word_position >= len(looped_query_word_locations) - 1:
+            break
+        
+        for current_location in query_word_locations:
+            #print(f"Current location: {current_location}.")
+
+            current_column = current_location["column"]
+            # Use this list to filter locations of the next query word
+            columns_in_loop = get_columns_in_loop(
+                                                  metadata_column_dictionary,
+                                                  current_column,
+                                                  columns_traversed=[])
+            current_positions = current_location["positions"]
+
+            # Create a list of locations that can be found on this loop.
+            # Location format: {"column": (1), "positions": [1]}
+            next_locations = looped_query_word_locations[query_word_position + 1]
+            next_viable_locations = [
+                                     location for location
+                                     in next_locations
+                                     if location["column"] in columns_in_loop]
+            #print(f"Next viable locations: {next_viable_locations}.")
+            
+            # What if a location points to the column name? The positions are effectively wildcards.
+            # reference: https://stackoverflow.com/a/58265773
+            [location.update(positions=current_positions) for location in next_viable_locations if location['positions']==[0]]
+            #print(f"Next wildcard locations: {next_viable_locations}.")
+
+            
+            # Maybe I should expand my locations. Currently I support multiple positions
+            # per column. I can create separate items for all of those.
+            start_pointers = [
+                              (current_location["column"], position)
+                              for position in current_location["positions"]
+            ]
+            #print(f"Start pointers: {start_pointers}.")
+
+            end_pointers = []
+            for location in next_viable_locations:
+                for position in location['positions']:
+                    end_pointers.append((location["column"], position))
+            #print(f"End pointers: {end_pointers}.")
+
+            endpoint_pairs = list(itertools.product(start_pointers, end_pointers))
+            #print(f"Endpoint pairs: {endpoint_pairs}.")
+
+            endpoint_scores = [
+                               calculate_positions_score(endpoints[0][1], endpoints[1][1])
+                               for endpoints in endpoint_pairs]
+            #print(f"Endpoint scores: {endpoint_scores}.")
+            max_endpoints_score = max(endpoint_scores)            
+
+            scored_endpoints = zip(endpoint_pairs, endpoint_scores)
+            max_score_endpoints = [
+                                   endpoints for endpoints
+                                   in scored_endpoints
+                                   if endpoints[1] == max_endpoints_score]
+            #print(f"Max score endpoints: {max_score_endpoints}.")
+
+            # Generate a list of viable edges
+            max_score_edges = []
+            for endpoints in max_score_endpoints:
+                metadata_values = endpoints[0]
+                score = endpoints[1]        
+        
+                start_reference = metadata_values[0]
+                end_reference = metadata_values[1]
+                
+                edge_dictionary = {
+                                   "start": start_reference,
+                                   "end": end_reference,
+                                   "score": score
+                }
+                max_score_edges.append(edge_dictionary)
+            edges_list.append(max_score_edges)
+    return edges_list
+```
+
+```{python}
+#| code-fold: true
+def calculate_edge_score(edge, edge_position, column_position_dictionaries):
+    start_position = column_position_dictionaries[edge_position][tuple(edge['start'])]
+    end_position = column_position_dictionaries[edge_position + 1][tuple(edge['end'])]
+
+    if start_position == 0 or end_position == 0:
+        max_position = max([start_position, end_position])
+        start_position = max_position
+        end_position = max_position
+
+    position_score = abs(start_position - end_position)
+    edge_score = position_score * edge["number_of_steps"]
+    return edge_score
+```
+
+```{python}
+#| code-fold: true
+def choose_loop(list_of_viable_edges, previous_node=None):
+    chosen_edges = []
+    for position, viable_edges in enumerate(list_of_viable_edges):
+        if previous_node:
+            matching_viable_edges = [edge for edge in viable_edges if edge['start'] == previous_node]
+        else:
+            matching_viable_edges = viable_edges
+        
+        sorted_viable_edges = sorted(matching_viable_edges, key=lambda edge: edge['score'])
+        chosen_edge = sorted_viable_edges[0]
+        chosen_edges.append(chosen_edge)
+    return chosen_edges
+```
+
+```{python}
+#| code-fold: true
+def make_a_loop(current_node, edges_dictionary, loop=[]):
+    print(current_node)
+    next_nodes = edges_dictionary[current_node]
+    # [(((column), position), score)]
+    # [(((1, 16), 2), 1)]
+    #print(f"Current loop: {loop}.")
+    #print(f"Next nodes: {next_nodes}.")
+    next_different_nodes = [node for node in next_nodes if node[0] != current_node]   
+     
+    positive_nodes = [node for node in next_different_nodes if node[1] == 1]
+    negative_nodes = [node for node in next_different_nodes if node[1] == -1]
+
+    if positive_nodes:
+        next_node = random.choice(positive_nodes)
+    else:
+        next_node = random.choice(negative_nodes)
+        
+    if next_node in loop[:1]:
+        return tuple(loop)
+    else:
+        loop.append(next_node)
+        return make_a_loop(next_node[0], edges_dictionary, loop)
+```
+
+# Initialize database
+## Create database structures
+```{python}
+csv_file_path = 'player.csv'
+
+database_structures = initialize_database()
+index_list = database_structures["index_list"]
+word_positions = database_structures["word_positions"]
+```
+
+## Populate database
+```{python}
+row_matrix = read_comma_separated_values_file_to_matrix(csv_file_path)
+looped_row_matrix = add_loop_name_to_first_row_of_matrix(csv_file_path, row_matrix)
+column_matrix = transpose_matrix(looped_row_matrix)
+
+for column in column_matrix:
+    update_index(column, index_list, word_positions)    
+
+# Add the next column name to the end of each column
+looped_column_matrix = add_loop_name_to_ends_of_columns_in_matrix(column_matrix)
+
+metadata_column_matrix = convert_data_matrix_to_metadata_matrix(
+                                                                looped_column_matrix,
+                                                                word_positions)
+metadata_column_dictionary = convert_metadata_matrix_to_dictionary(metadata_column_matrix)
+```
+
+```{python}
+metadata_column_dictionary
+```
+
+# Process query
+```{python}
+#query = 'jarrian jones age'
+#query = 'jarrian jones position'
+query = 'justin position'
+
+query_word_locations_list = get_query_word_column_locations(query, index_list, word_positions)
+query_word_locations_list
+```
+Now I have (1) list containing (3) dictionaries; one for each of the words in my query. Each dictionary contains a set of key-value pairs where each key describes the name of a column in the database and each value indicates the position that the query word occurs at in that column.
+
+With my query location lists I can do a column traversal search to find loops that connect all of these words. In order to find a loop I need to check whether I can get from the column of one word to the next.
+
+## Loop the query list
+In order to validate my query results I make a loop from the last word to the first. Here I add the first word to the end of `query_word_locations_list` to make `looped_query_locations_list`.
+```{python}
+looped_query_locations_list = query_word_locations_list.copy()
+looped_query_locations_list.append(looped_query_locations_list[0])
+print(looped_query_locations_list)
+```
+
+```{python}
+print(query_word_locations_list)
+```
+
+## Find loops through columns that connect all query words
+```{python}
+edges = find_query_loops(metadata_column_dictionary, looped_query_locations_list)
+edges
+```
+
+Now that I have a list of viable edges I want to connect them together to make a loop. My edges are structured as a list of lists, or a matrix, of dictionaries. I was thinking I would create a dictionary in the format {start_node: [(end_node, score), (end_node, score)]}.
+
+## Create a dictionary of edges
+```{python}
+edges_dictionary = {}
+for edge_list in edges:
+    for edge in edge_list:
+        start_word = edge['start']
+        end_word = edge['end']
+        score = edge['score']
+
+        value = (end_word, score)
+
+        if edges_dictionary.get(start_word):
+            edges_dictionary[start_word].append(value)
+        else:
+            edges_dictionary[start_word] = [value]
+print(edges_dictionary)
+```
+
+## Create loops from my dictionary of edges
+```{python}
+all_loops = []
+for start_node in edges_dictionary.keys():
+    loop = make_a_loop(start_node, edges_dictionary,loop=[])
+    all_loops.append(loop)
+all_loops
+```
+
+## Cumulatively scored loops
+```{python}
+cumulatively_scored_loops = []
+for loop in all_loops:
+    # Reference: https://stackoverflow.com/a/25047602
+    cumulative_loop_score = sum(edge[-1] for edge in loop)
+    scored_loop = (loop, cumulative_loop_score)
+    cumulatively_scored_loops.append(scored_loop)
+cumulatively_scored_loops 
+```
+
+## Get highest scored loops
+```{python}
+maximum_loop_score = max(loop[-1] for loop in cumulatively_scored_loops)
+maximum_loop_score
+```
+
+```{python}
+highest_scored_loops = [
+                        loop for loop 
+                        in cumulatively_scored_loops
+                        if loop[-1] == maximum_loop_score]
+```
+
+```{python}
+sorted(highest_scored_loops)
+```
+
+I have (1) list of (3) subordinate sets where each subordinate set contains valid paths from the word at the same position to the next one. So the first subordinate list contains valid paths from the first word to the second and the third and last subordinate list contains valid paths from the last word in the query to the first.
+
+Each item in a subordinate set contains (3) nested sets where the innermost set references the document and the middle set references the position within the document and the outermost set references the cumulative score.
+
+# Converting loops back into words
+In this case I have (3) highest scored loops which all correspond to the same words in different order. How do I choose which loop to return? I guess I want the one where the columns most closely match the initial inputs.
+
+I can return to the original `query_word_locations_list` and loop through each entry and look for it iteratively by column in the `highest_scored_loops`.
+
+```{python}
+for word_locations_list in query_word_locations_list:
+    for word_locations in word_locations_list:
+        print(word_locations["column"])
+        # Lookup this column in highest scored loops
+```
+
+## Understanding the structure of highest scored loops
+### First loop and cumulative loop score
+```{python}
+highest_scored_loops[0]
+```
+
+### First loop
+```{python}
+highest_scored_loops[0][0]
+```
+
+### First item in first loop
+```{python}
+highest_scored_loops[0][0][0]
+```
+
+### Column and position of the first item in the first loop
+```{python}
+highest_scored_loops[0][0][0][0]
+```
+
+### Column of the first item in the first loop
+```{python}
+highest_scored_loops[0][0][0][0][0]
+```
+
+What if I create a matrix of the columns of the highest scored loops where the first list contains all of the columns of the first word of each loop so then I could look to find my column of interest in that list and if I do not find it then move to the next one?
+
+### Create a matrix of columns of highest scored loops
+```{python}
+loop_columns = []
+for loop in highest_scored_loops:
+    nodes = loop[0]
+    node_columns = [node[0][0] for node in nodes]
+    #print(node_columns)
+    loop_columns.append(node_columns)
+loop_columns
+```
+
+### Transpose `loop_columns` matrix
+I want all of the columns of the same position within a loop to be in the same list so that I can figure out the position of the loop in `highest_scored_loops` that I want to use to return results.
+
+
+```{python}
+transposed_loop_columns = transpose_matrix(loop_columns)
+transposed_loop_columns
+```
+
+In this case the matrix was symmetrical so none of the values changed. I am not sure whether it will always be symmetrical.
+
+```{python}
+def get_most_symmetrical_loop(transposed_loop_columns, query_word_locations_list):
+    loop_indexes = []
+    for word_locations_list in query_word_locations_list:
+        for word_locations in word_locations_list:
+            word_column = word_locations["column"]
+            for row in transposed_loop_columns:
+                for index, value in enumerate(row):
+                    if word_column == value:
+                        loop_indexes.append(index)
+                if loop_indexes:
+                    return loop_indexes
+    return None
+```
+
+```{python}
+loop_indexes = get_most_symmetrical_loop(transposed_loop_columns, query_word_locations_list)
+loop_indexes
+```
+
+```{python}
+loops_to_return = [highest_scored_loops[loop_index] for loop_index in loop_indexes]
+loops_to_return
+```
+
+## Convert loops into strings
+Now that I have the loop that I want to return I need to convert the metadata items back into data strings using the database index. I am not using any reverse lookup functions yet.
+
+I can peel off the loop score.
+
+```{python}
+loop_scores = [loop[1] for loop in loops_to_return]
+loop_scores
+```
+
+```{python}
+loops_nodes = [loop[0] for loop in loops_to_return]
+loops_nodes
+```
+
+Each location references a column and a position and if I retrieve the value at that position it should be a numerical value or a dictionary that looks like the following.
+
+```
+{'column': 'index', 'positions': [4]}
+```
+
+If it is a numerical value I can return to verbatim and if it is a dictionary then I look up the word at the position(s) listed in the `positions` value and add them to the result string.
+
+I am going to again look at the structure of my `index_list` to understand how to do a reverse lookup of words from it.
+```{python}
+index_list
+```
+
+```{python}
+def convert_loop_into_string(loop_nodes):
+    result_string = []
+    for node in loop_nodes:
+        column = node[0][0]
+        position = node[0][1]
+        value = metadata_column_dictionary[column][position]
+        if isinstance(value, dict):
+            for position in value['positions']:
+                word = index_list[position]['word']
+                result_string.append(word)
+        else:
+            result_string.append(str(value))
+    result = " ".join(result_string)
+    return result
+```
+
+## Format result into string
+```{python}
+results = [convert_loop_into_string(loop_nodes) for loop_nodes in loops_nodes]
+results
+```
