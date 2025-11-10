@@ -88,6 +88,9 @@ metadata_locations = [
 ```
 
 Now that I have my query I need to figure out what I want to do with it.
+
+
+
 ```
 column_traversal_search(
                         metadata_column_dictionary,
@@ -115,6 +118,7 @@ import csv
 import json
 
 # Manipulate lists
+import random
 import itertools
 from operator import itemgetter
 ```
@@ -492,17 +496,18 @@ def calculate_positions_score(first_position, second_position):
 ```
 
 ```{python}
-def find_query_loops_too(metadata_column_dictionary, query_word_location_list):
+def find_query_loops_too(metadata_column_dictionary, query_word_locations_list):
     """
     Arguments:
         metadata_column_dictionary (dict): A dictionary of the database represented as references to the index.
-        query_word_location_lists (list): A list of lists of locations where each word in the query can be found. Each inner list corresponds to the word in the query at the same position.
+        query_word_locations_lists (list): A list of lists of locations where each word in the query can be found. Each inner list corresponds to the word in the query at the same position.
     """
-    query_word_locations_list.append(query_word_location_list[0])
+    print(f"Query word locations list: {query_word_locations_list}.")
+    query_word_locations_list.append(query_word_locations_list[0])
 
     edges_list = []
-    for query_word_position, query_word_locations in enumerate(query_word_location_list):
-        if query_word_position >= len(query_word_location_list) - 1:
+    for query_word_position, query_word_locations in enumerate(query_word_locations_list):
+        if query_word_position >= len(query_word_locations_list) - 1:
             break
         
         for current_location in query_word_locations:
@@ -514,8 +519,6 @@ def find_query_loops_too(metadata_column_dictionary, query_word_location_list):
                                                   metadata_column_dictionary,
                                                   current_column,
                                                   columns_traversed=[])
-            
-
             current_positions = current_location["positions"]
 
             # Create a list of locations that can be found on this loop.
@@ -582,7 +585,7 @@ def find_query_loops_too(metadata_column_dictionary, query_word_location_list):
     return edges_list
 ```
             
-```{python}
+```
 def find_query_loops(list_of_location_dictionaries, metadata_column_dictionary):
     """
     
@@ -634,6 +637,7 @@ def find_query_loops(list_of_location_dictionaries, metadata_column_dictionary):
 ```
 
 ```{python}
+# How do you do
 def calculate_edge_score(edge, edge_position, column_position_dictionaries):
     start_position = column_position_dictionaries[edge_position][tuple(edge['start'])]
     end_position = column_position_dictionaries[edge_position + 1][tuple(edge['end'])]
@@ -741,8 +745,8 @@ metadata_column_dictionary
 ```{python}
 query = 'justin'
 
-query_locations_list = get_query_word_column_locations(query, index_list, word_positions)
-query_locations_list
+query_word_locations_list = get_query_word_column_locations(query, index_list, word_positions)
+query_word_locations_list
 ```
 
 Process query
@@ -759,7 +763,7 @@ Now that I have my query location lists the next thing that I want to do is a co
 Another value of having the column names in this metadata format is that it is simpatico with the structure of the `metadata_column_dictionary` which contains all of the database connections that I will use for graph traversal.
 
 ```{python}
-looped_query_locations_list = query_locations_list.copy()
+looped_query_locations_list = query_word_locations_list.copy()
 looped_query_locations_list.append(looped_query_locations_list[0])
 print(looped_query_locations_list)
 ```
@@ -796,14 +800,141 @@ columns_in_loop
 find_query_loops_too(metadata_column_dictionary, query_word_locations_list)
 ```
 
-```
-edges = find_query_loops(query_locations_list, metadata_column_dictionary)
+```{python}
+edges = find_query_loops_too(metadata_column_dictionary, query_word_locations_list) 
 edges
 ```
 
-And now I have (1) list of (3) subordinate lists where each subordinate list contains valid paths from the word at the same position to the next one. So the first subordinate list contains valid paths from the first word to the second and the third and last subordinate list contains valid paths from the last word in the query to the first.
+Now that I have a list of viable edges I want to connect them together to make a loop. My edges are structured as a list of lists, or a matrix, of dictionaries. I was thinking I would create a dictionary in the format {start_node: [(end_node, score), (end_node, score)]}.
 
-With valid paths from column to column I need to integrate column position information in order to figure out which column element to return in the query response.
+Create a dictionary of edges.
+```{python}
+edges_dictionary = {}
+for edge_list in edges:
+    for edge in edge_list:
+        start_word = edge['start']
+        end_word = edge['end']
+        score = edge['score']
+
+        value = (end_word, score)
+
+        if edges_dictionary.get(start_word):
+            edges_dictionary[start_word].append(value)
+        else:
+            edges_dictionary[start_word] = [value]
+print(edges_dictionary)
+```
+
+```{python}
+def choose_next_edge(current_node, edges_dictionary, loop={}):
+    # How do I want to organize my edges?
+    # I could create a list of nodes.
+    # loop = {"score": score, "nodes": nodes}
+    if current_node == loop[0]:
+        return loop
+    else:
+        node_identifier = current_node[0]
+        edge_score = current_node[1]
+
+        loop["nodes"].append(node_identifier)
+        loop["score"] += edge_score
+
+        next_nodes = edges_dictionary[current_node]
+        # next_node = random() 
+```
+
+```{python}
+def make_a_loop(current_node, edges_dictionary, loop=[]):
+    #if current_node in loop[:1]:
+    #    return tuple(loop)
+    #else:
+        #node_identifier = current_node[0]
+        #edge_score = current_node[1]
+
+    print(current_node)
+    next_nodes = edges_dictionary[current_node]
+    # [(((column), position), score)]
+    # [(((1, 16), 2), 1)]
+    #print(f"Current loop: {loop}.")
+    #print(f"Next nodes: {next_nodes}.")
+    next_different_nodes = [node for node in next_nodes if node[0] != current_node]   
+     
+    positive_nodes = [node for node in next_different_nodes if node[1] == 1]
+    negative_nodes = [node for node in next_different_nodes if node[1] == -1]
+
+    if positive_nodes:
+        next_node = random.choice(positive_nodes)
+    else:
+        next_node = random.choice(negative_nodes)
+        
+    if next_node in loop[:1]:
+        return tuple(loop)
+    else:
+        loop.append(next_node)
+        return make_a_loop(next_node[0], edges_dictionary, loop)
+```
+
+With my dictionary of edges I want to create a loop.
+```{python}
+all_loops = []
+for start_node in edges_dictionary.keys():
+    loop = make_a_loop(start_node, edges_dictionary,loop=[])
+    all_loops.append(loop)
+all_loops
+```
+
+# Cumulatively scored loops
+```{python}
+cumulatively_scored_loops = []
+for loop in all_loops:
+    # Reference: https://stackoverflow.com/a/25047602
+    cumulative_loop_score = sum(edge[-1] for edge in loop)
+    scored_loop = (loop, cumulative_loop_score)
+    cumulatively_scored_loops.append(scored_loop)
+cumulatively_scored_loops 
+```
+
+Now that I have a set of viable loops the next thing that I want to do is remove loops that begin in different locations. If I `sorted()` each loop as a list and then converted it into a tuple and then performed a `set()` operation on the tuples I could get unique loops. The sorting operation would distort the structure of the loop as well which would not be useful for me to return results.
+
+# A set of loops
+```{python}
+set(all_loops)
+```
+
+# Sort loops by cumulative score and select the highest scored loop
+I do not think that this steps is adding value.
+```{python}
+sorted(cumulatively_scored_loops, key=lambda loop: loop[1])
+```
+
+#
+```{python}
+maximum_loop_score = max(loop[-1] for loop in cumulatively_scored_loops)
+maximum_loop_score
+```
+
+```{python}
+highest_scored_loops = [
+                        loop for loop 
+                        in cumulatively_scored_loops
+                        if loop[-1] == maximum_loop_score]
+```
+
+# A sorted set of loops
+I ignore the cumulative loop score when sorting.
+```{python}
+sorted(highest_scored_loops, key=lambda loop: loop[0])
+```
+
+```{python}
+len(highest_scored_loops)
+```
+
+Now that I have my highest score loops I can retrieve the loop that most closely matches my input string.
+
+And now I have (1) list of (3) subordinate sets where each subordinate set contains valid paths from the word at the same position to the next one. So the first subordinate list contains valid paths from the first word to the second and the third and last subordinate list contains valid paths from the last word in the query to the first.
+
+Each item in a subordinate set contains (3) nested sets where the innermost set references the document and the middle set references the position within the document and the outermost set references the cumulative score
 
 ### Ranking paths
 One of the challenges that I face is prioritizing results when there are multiple valid loops that connect all of the query words. Because all of the items at the same position in a loop are part of the same "row" they are explicitly connected to each other.
@@ -839,7 +970,7 @@ Now I have the documents that contain the results that I am looking for. In orde
 In the case of variables I want to infer the appropriate row to return a value from by looking at the rows of the surrounding words. For instance if I query "jarrian jones age" and age is at the zero position then I would want to look at which positions "jones" and "jarrian" are in because they are the adjacent words when I consider this query as a loop. If those adjacent words occupy different rows then I can decide which one to prioritize and return both results. I will probably prioritize the row of the previous word over the next word.
 
 ```{python}
-def get_previous_position(current_position, query_locations_lists):
+def get_previous_position(current_position, query_word_locations_lists):
     if current_position == 0:
         # If the current document is the first in the loop then the previous document is the last.
         previous_position = -1
