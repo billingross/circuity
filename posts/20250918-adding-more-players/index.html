@@ -9,7 +9,7 @@
 <meta name="author" content="Paul Billing-Ross">
 <meta name="dcterms.date" content="2025-09-18">
 
-<title>Player database: adding more players – Circuity</title>
+<title>Player database: adding more players – Circuity database</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -117,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
-    <span class="navbar-title">Circuity</span>
+    <span class="navbar-title">Circuity database</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -131,12 +131,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img">
-</i> 
-<span class="menu-text"></span></a>
-  </li>  
-  <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com"> <i class="bi bi-twitter" role="img">
+    <a class="nav-link" href="https://github.com/billingross/circuity"> <i class="bi bi-github" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -200,7 +195,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Methods</h1>
 <section id="load-dependencies" class="level2">
 <h2 class="anchored" data-anchor-id="load-dependencies">Load dependencies</h2>
-<div id="cf48cd8b" class="cell" data-execution_count="1">
+<div id="2e170851" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
@@ -211,7 +206,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="define-functions" class="level2">
 <h2 class="anchored" data-anchor-id="define-functions">Define functions</h2>
-<div id="27fe9f62" class="cell" data-execution_count="2">
+<div id="f5dbf415" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> file_traversal_search(current_file_path, files_to_look_for, files_traversed<span class="op">=</span>[]):</span>
@@ -249,7 +244,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p>Test the <code>file_traversal_search()</code> function.</p>
-<div id="1f82893d" class="cell" data-execution_count="3">
+<div id="e0b70e4a" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>first_file <span class="op">=</span> <span class="st">'database/player/age.json'</span></span>
@@ -271,7 +266,7 @@ database/player/position.json ['database/player/first-name.json']</code></pre>
  'database/player/first-name.json']</code></pre>
 </div>
 </div>
-<div id="a2800777" class="cell" data-execution_count="4">
+<div id="ea7964d7" class="cell" data-execution_count="4">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> retrieve_values(metadata_file, indexes):</span>
@@ -290,7 +285,7 @@ database/player/position.json ['database/player/first-name.json']</code></pre>
 <span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="50d1f3a0" class="cell" data-execution_count="5">
+<div id="0836e7ec" class="cell" data-execution_count="5">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_query_locations(query, index_dictionary):</span>
@@ -304,7 +299,7 @@ database/player/position.json ['database/player/first-name.json']</code></pre>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> query_word_location_lists</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="2c49f788" class="cell" data-execution_count="6">
+<div id="95e91f5c" class="cell" data-execution_count="6">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> find_query_loop(query_word_location_lists):</span>
@@ -374,7 +369,7 @@ database/player/position.json ['database/player/first-name.json']</code></pre>
 <span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> edges</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="c7e67cd6" class="cell" data-execution_count="7">
+<div id="a07197bc" class="cell" data-execution_count="7">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_response_nodes(edges):</span>
@@ -385,7 +380,7 @@ database/player/position.json ['database/player/first-name.json']</code></pre>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> response_node_references</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="e6588f4e" class="cell" data-execution_count="8">
+<div id="64fe2269" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lookup_metadata(response_node_references):</span>
@@ -401,7 +396,7 @@ database/player/position.json ['database/player/first-name.json']</code></pre>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> metadata_values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="4e7cc235" class="cell" data-execution_count="9">
+<div id="3b9da18d" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lookup_actual_values(metadata_values):</span>
@@ -419,7 +414,7 @@ database/player/position.json ['database/player/first-name.json']</code></pre>
 <span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> response_values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="add9d0f0" class="cell" data-execution_count="10">
+<div id="4734f39b" class="cell" data-execution_count="10">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> format_response(response_values):</span>
@@ -435,7 +430,7 @@ database/player/position.json ['database/player/first-name.json']</code></pre>
 <h2 class="anchored" data-anchor-id="load-the-database">Load the database</h2>
 <section id="define-database-structure-using-a-dictionary" class="level3">
 <h3 class="anchored" data-anchor-id="define-database-structure-using-a-dictionary">Define database structure using a dictionary</h3>
-<div id="d407392a" class="cell" data-execution_count="11">
+<div id="3a397827" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>database_files <span class="op">=</span> [</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"database/index.json"</span>,</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"database/player/age.json"</span>,</span>
@@ -448,7 +443,7 @@ database/player/position.json ['database/player/first-name.json']</code></pre>
 <section id="convert-the-index-from-a-list-to-a-dictionary" class="level3">
 <h3 class="anchored" data-anchor-id="convert-the-index-from-a-list-to-a-dictionary">Convert the index from a list to a dictionary</h3>
 <p>I natively store the index as a list of dictionaries. For the sake of reverse lookup this is useful and for the sake of lookup it is not. Here I convert the index from a list to a dictionary for the sake of lookup.</p>
-<div id="f131f808" class="cell" data-execution_count="12">
+<div id="51b35e25" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">"database/index.json"</span>) <span class="im">as</span> file_handle:</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    index_list <span class="op">=</span> json.load(file_handle)</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>index_dictionary <span class="op">=</span> {item[<span class="st">"value"</span>]: item[<span class="st">"references"</span>] <span class="cf">for</span> item <span class="kw">in</span> index_list}</span>
@@ -478,7 +473,7 @@ database/player/position.json ['database/player/first-name.json']</code></pre>
 <h2 class="anchored" data-anchor-id="validate-queries">Validate queries</h2>
 <section id="query-justin-blackmon-position" class="level3">
 <h3 class="anchored" data-anchor-id="query-justin-blackmon-position">Query Justin Blackmon position</h3>
-<div id="c4914887" class="cell" data-execution_count="13">
+<div id="3a845168" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> <span class="st">"Justin Blackmon position"</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Query: </span><span class="sc">{</span>query<span class="sc">}</span><span class="ss">."</span>)</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -510,7 +505,7 @@ Response: Justin Blackmon free safety.</code></pre>
 </section>
 <section id="query-justin-blackmon-age" class="level3">
 <h3 class="anchored" data-anchor-id="query-justin-blackmon-age">Query Justin Blackmon age</h3>
-<div id="9db725d1" class="cell" data-execution_count="14">
+<div id="209fe851" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> <span class="st">"Justin Blackmon age"</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Query: </span><span class="sc">{</span>query<span class="sc">}</span><span class="ss">."</span>)</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -542,7 +537,7 @@ Response: Justin Blackmon 27.</code></pre>
 </section>
 <section id="query-jarrian-jones-position" class="level3">
 <h3 class="anchored" data-anchor-id="query-jarrian-jones-position">Query Jarrian Jones position</h3>
-<div id="7d006054" class="cell" data-execution_count="15">
+<div id="082c7ba1" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> <span class="st">"Jarrian Jones position"</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Query: </span><span class="sc">{</span>query<span class="sc">}</span><span class="ss">."</span>)</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -574,7 +569,7 @@ Response: Jarrian Jones cornerback.</code></pre>
 </section>
 <section id="query-age-jarrian-jones" class="level3">
 <h3 class="anchored" data-anchor-id="query-age-jarrian-jones">Query age Jarrian Jones</h3>
-<div id="238aa8e9" class="cell" data-execution_count="16">
+<div id="3095080c" class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> <span class="st">"age Jarrian Jones"</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Query: </span><span class="sc">{</span>query<span class="sc">}</span><span class="ss">."</span>)</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -606,7 +601,7 @@ Response: 23 Jarrian Jones.</code></pre>
 </section>
 <section id="query-jarrian-age-jones" class="level3">
 <h3 class="anchored" data-anchor-id="query-jarrian-age-jones">Query “Jarrian age Jones”</h3>
-<div id="e253948c" class="cell" data-execution_count="17">
+<div id="4301d60a" class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> <span class="st">"Jarrian age Jones"</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Query: </span><span class="sc">{</span>query<span class="sc">}</span><span class="ss">."</span>)</span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -642,7 +637,7 @@ Response: Jarrian 23 Jones.</code></pre>
 </section>
 <section id="query-strong-safety-name" class="level3">
 <h3 class="anchored" data-anchor-id="query-strong-safety-name">Query “strong safety name”</h3>
-<div id="0953f048" class="cell" data-execution_count="18">
+<div id="fa4bfba6" class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> <span class="st">"free safety age"</span></span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Query: </span><span class="sc">{</span>query<span class="sc">}</span><span class="ss">."</span>)</span>
 <span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
