@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Paul Billing-Ross">
-<meta name="dcterms.date" content="2025-11-10">
+<meta name="dcterms.date" content="2025-11-09">
 
 <title>Player database: refining my search algorithm – Circuity database</title>
 <style>
@@ -169,7 +169,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">November 10, 2025</p>
+        <p class="date">November 9, 2025</p>
       </div>
     </div>
     
@@ -259,7 +259,7 @@ metadata_locations = [
 <h1>Methods</h1>
 <section id="load-dependencies" class="level2">
 <h2 class="anchored" data-anchor-id="load-dependencies">Load dependencies</h2>
-<div id="7aa3b2fd" class="cell" data-execution_count="1">
+<div id="ce0e5a04" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Logging</span></span>
@@ -284,7 +284,7 @@ metadata_locations = [
 <h2 class="anchored" data-anchor-id="functions">Functions</h2>
 <section id="import-and-export-functions" class="level3">
 <h3 class="anchored" data-anchor-id="import-and-export-functions">Import and export functions</h3>
-<div id="ac13519b" class="cell" data-execution_count="2">
+<div id="6b986e42" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add_new_word_to_index(word, column_name, position, index_list, word_positions):</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    new_word_locations <span class="op">=</span> {column_name: [position]}</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    new_index_item <span class="op">=</span> {<span class="st">'word'</span>: word, <span class="st">'locations'</span>: new_word_locations}</span>
@@ -293,7 +293,7 @@ metadata_locations = [
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    index_list.append(new_index_item)</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> index_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="dca5a99f" class="cell" data-execution_count="3">
+<div id="f7d11f85" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> update_index(column, index_list, word_index_positions):</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    column_name <span class="op">=</span> column[<span class="dv">0</span>]</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -326,7 +326,7 @@ metadata_locations = [
 <span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>                <span class="co"># I need to add this word to the index</span></span>
 <span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>                index_list <span class="op">=</span> add_new_word_to_index(word, column_name, position, index_list, word_positions)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="1c01a37d" class="cell" data-execution_count="4">
+<div id="14143181" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> update_database(column, index_list, word_index_positions):</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># I will use the column name to add this word location to the index</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    column_name <span class="op">=</span> column[<span class="dv">0</span>]</span>
@@ -349,7 +349,7 @@ metadata_locations = [
 <span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Add this word as a new item in the index_list</span></span>
 <span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>                index_list <span class="op">=</span> add_new_word_to_index(word, column_name, position, index_list, word_positions)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="c70a295c" class="cell" data-execution_count="5">
+<div id="f20c9c74" class="cell" data-execution_count="5">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> transpose_matrix(matrix):</span>
@@ -366,7 +366,7 @@ metadata_locations = [
 <span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> transposed_matrix</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="b41f1025" class="cell" data-execution_count="6">
+<div id="247365bb" class="cell" data-execution_count="6">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> initialize_database():</span>
@@ -386,7 +386,7 @@ metadata_locations = [
 <span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    }</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="6423c1c8" class="cell" data-execution_count="7">
+<div id="ae63a39a" class="cell" data-execution_count="7">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> read_comma_separated_values_file_to_matrix(csv_file):</span>
@@ -396,7 +396,7 @@ metadata_locations = [
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [row <span class="cf">for</span> row <span class="kw">in</span> csv_reader]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="782ae6ad" class="cell" data-execution_count="8">
+<div id="0854317f" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add_loop_name_to_first_row_of_matrix(csv_file_path, matrix):</span>
@@ -410,7 +410,7 @@ metadata_locations = [
 <span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> matrix</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="3d498209" class="cell" data-execution_count="9">
+<div id="9ff5993c" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> convert_data_matrix_to_metadata_matrix(data_matrix, word_positions):</span>
@@ -426,7 +426,7 @@ metadata_locations = [
 <span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> metadata_columns</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="0732db44" class="cell" data-execution_count="10">
+<div id="86e6d578" class="cell" data-execution_count="10">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> convert_metadata_matrix_to_dictionary(metadata_matrix):</span>
@@ -457,7 +457,7 @@ def convert_index_to_word(index, index_list):
     word = word_dict["word"]
     #print(f"Converted index ({index}) to word {word}.")
     return word</code></pre>
-<div id="cce45875" class="cell" data-execution_count="11">
+<div id="6e037985" class="cell" data-execution_count="11">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> read_string_to_reference(this_string, word_positions):</span>
@@ -477,7 +477,7 @@ def convert_index_to_word(index, index_list):
 <span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> this_string_reference</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="5af892c6" class="cell" data-execution_count="12">
+<div id="5052fce0" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> read_word_to_index_position(word, word_positions):</span>
@@ -491,7 +491,7 @@ def convert_index_to_word(index, index_list):
 <span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Could not find word </span><span class="sc">{</span>word<span class="sc">}</span><span class="ss"> in word_positions: </span><span class="sc">{</span>word_positions<span class="sc">}</span><span class="ss">."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="67b7ce86" class="cell" data-execution_count="13">
+<div id="ee91eeae" class="cell" data-execution_count="13">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add_loop_name_to_ends_of_columns_in_matrix(column_matrix):</span>
@@ -512,7 +512,7 @@ def convert_index_to_word(index, index_list):
 </section>
 <section id="search-algorithm" class="level2">
 <h2 class="anchored" data-anchor-id="search-algorithm">Search algorithm</h2>
-<div id="29d0c406" class="cell" data-execution_count="14">
+<div id="a520f809" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_columns_in_loop(metadata_column_dictionary, current_column_key, columns_traversed<span class="op">=</span>[]):</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> current_column_key <span class="kw">in</span> columns_traversed:</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> columns_traversed</span>
@@ -526,7 +526,7 @@ def convert_index_to_word(index, index_list):
 <span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>                               next_column_key,</span>
 <span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>                               columns_traversed)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="616dd29f" class="cell" data-execution_count="15">
+<div id="a96fdb81" class="cell" data-execution_count="15">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> column_traversal_search(metadata_column_dictionary, current_column_key, column_keys_to_look_for, columns_traversed<span class="op">=</span>[], viable_paths<span class="op">=</span>{}):</span>
@@ -570,7 +570,7 @@ def convert_index_to_word(index, index_list):
 <span id="cb23-39"><a href="#cb23-39" aria-hidden="true" tabindex="-1"></a>                                   viable_paths)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="94b474de" class="cell" data-execution_count="16">
+<div id="7bac83e0" class="cell" data-execution_count="16">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> location_traversal_search(metadata_column_dictionary, current_location, locations_to_look_for, locations_traversed<span class="op">=</span>[], viable_paths<span class="op">=</span>{}):</span>
@@ -603,7 +603,7 @@ def convert_index_to_word(index, index_list):
 <span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>                                   viable_paths)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="9b3d824c" class="cell" data-execution_count="17">
+<div id="ff412a1a" class="cell" data-execution_count="17">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> convert_string_to_index_positions(this_string, word_positions):</span>
@@ -612,7 +612,7 @@ def convert_index_to_word(index, index_list):
 <span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [word_positions.get(word) <span class="cf">for</span> word <span class="kw">in</span> this_string.split()]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="65aa2ed8" class="cell" data-execution_count="18">
+<div id="d6927959" class="cell" data-execution_count="18">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_query_word_column_locations(query, index_list, word_positions):</span>
@@ -652,14 +652,14 @@ def convert_index_to_word(index, index_list):
 <span id="cb26-35"><a href="#cb26-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> query_word_location_lists</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="5b939248" class="cell" data-execution_count="19">
+<div id="874e95e6" class="cell" data-execution_count="19">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calculate_positions_score(first_position, second_position):</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> first_position <span class="op">==</span> second_position:</span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">1</span></span>
 <span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
 <span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="9ffd8895" class="cell" data-execution_count="20">
+<div id="c5add308" class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> find_query_loops_too(metadata_column_dictionary, query_word_locations_list):</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Arguments:</span></span>
@@ -796,7 +796,7 @@ def convert_index_to_word(index, index_list):
         
         #edges[this_column] = traversal_paths
     return edges</code></pre>
-<div id="b1337e9f" class="cell" data-execution_count="21">
+<div id="21987b98" class="cell" data-execution_count="21">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># How do you do</span></span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calculate_edge_score(edge, edge_position, column_position_dictionaries):</span>
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    start_position <span class="op">=</span> column_position_dictionaries[edge_position][<span class="bu">tuple</span>(edge[<span class="st">'start'</span>])]</span>
@@ -811,7 +811,7 @@ def convert_index_to_word(index, index_list):
 <span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>    edge_score <span class="op">=</span> position_score <span class="op">*</span> edge[<span class="st">"number_of_steps"</span>]</span>
 <span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> edge_score</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="035efa77" class="cell" data-execution_count="22">
+<div id="c3f5d396" class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> choose_loop(list_of_viable_edges, previous_node<span class="op">=</span><span class="va">None</span>):</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    chosen_edges <span class="op">=</span> []</span>
 <span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> position, viable_edges <span class="kw">in</span> <span class="bu">enumerate</span>(list_of_viable_edges):</span>
@@ -825,7 +825,7 @@ def convert_index_to_word(index, index_list):
 <span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>        chosen_edges.append(chosen_edge)</span>
 <span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> chosen_edges</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="27eb5871" class="cell" data-execution_count="23">
+<div id="479df538" class="cell" data-execution_count="23">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_response_documents(edges):</span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    response_node_references <span class="op">=</span> []</span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> edge_path <span class="kw">in</span> edges:</span>
@@ -839,7 +839,7 @@ def convert_index_to_word(index, index_list):
 <h1>Results</h1>
 <section id="initialize-and-populate-database" class="level2">
 <h2 class="anchored" data-anchor-id="initialize-and-populate-database">Initialize and populate database</h2>
-<div id="b65ed1b9" class="cell" data-execution_count="24">
+<div id="f1eda1ab" class="cell" data-execution_count="24">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>csv_file_path <span class="op">=</span> <span class="st">'player.csv'</span></span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>database_structures <span class="op">=</span> initialize_database()</span>
@@ -877,9 +877,9 @@ Word index entry: {'word': 'player', 'locations': {'player first name': [0], 'pl
 <section id="index-list" class="level3">
 <h3 class="anchored" data-anchor-id="index-list">Index list</h3>
 <p>The index list stores references to all of the locations where each word is located and is structured as a list so that if I know the position of the word from one of the database metadata files I can easily look it up based on its position in this list.</p>
-<div id="cf5b180c" class="cell" data-execution_count="25">
+<div id="e0e97c2e" class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>index_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="76">
+<div class="cell-output cell-output-display" data-execution_count="25">
 <pre><code>[{'word': 'index', 'locations': {'index': [0]}},
  {'word': 'player',
   'locations': {'player first name': [0],
@@ -911,9 +911,9 @@ Word index entry: {'word': 'player', 'locations': {'player first name': [0], 'pl
 <section id="index-dictionary" class="level3">
 <h3 class="anchored" data-anchor-id="index-dictionary">Index dictionary</h3>
 <p>The index dictionary stores references to all of the locations where each word is located. It is stored as a dictionary so that I can look up all of the locations of a word by the word itself.</p>
-<div id="4ed0fdf0" class="cell" data-execution_count="26">
+<div id="4e8c59cb" class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>{item[<span class="st">"word"</span>]: item[<span class="st">"locations"</span>] <span class="cf">for</span> item <span class="kw">in</span> index_list}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="77">
+<div class="cell-output cell-output-display" data-execution_count="26">
 <pre><code>{'index': {'index': [0]},
  'player': {'player first name': [0],
   'player last name': [0],
@@ -940,9 +940,9 @@ Word index entry: {'word': 'player', 'locations': {'player first name': [0], 'pl
 <section id="word-index" class="level3">
 <h3 class="anchored" data-anchor-id="word-index">Word index</h3>
 <p>The word index indicates the position of each word within the index list.</p>
-<div id="80fb01a1" class="cell" data-execution_count="27">
+<div id="27e6dd9a" class="cell" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>word_positions</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="78">
+<div class="cell-output cell-output-display" data-execution_count="27">
 <pre><code>{'index': 0,
  'player': 1,
  'first': 2,
@@ -966,9 +966,9 @@ Word index entry: {'word': 'player', 'locations': {'player first name': [0], 'pl
 <section id="column-matrix" class="level3">
 <h3 class="anchored" data-anchor-id="column-matrix">Column matrix</h3>
 <p>The column matrix after the next column pointers have been added.</p>
-<div id="4494c147" class="cell" data-execution_count="28">
+<div id="3cab8f7b" class="cell" data-execution_count="28">
 <div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>looped_column_matrix</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="79">
+<div class="cell-output cell-output-display" data-execution_count="28">
 <pre><code>[['player first name', 'justin', 'jarrian', 'justin', 'player last name'],
  ['player last name', 'blackmon', 'jones', 'jefferson', 'player position'],
  ['player position',
@@ -982,9 +982,9 @@ Word index entry: {'word': 'player', 'locations': {'player first name': [0], 'pl
 </section>
 <section id="metadata-matrix" class="level3">
 <h3 class="anchored" data-anchor-id="metadata-matrix">Metadata matrix</h3>
-<div id="130cf084" class="cell" data-execution_count="29">
+<div id="1f2e7511" class="cell" data-execution_count="29">
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>metadata_column_matrix</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="80">
+<div class="cell-output cell-output-display" data-execution_count="29">
 <pre><code>[[{'column': 'index', 'positions': [1, 2, 3]},
   {'column': 'index', 'positions': [4]},
   {'column': 'index', 'positions': [5]},
@@ -1011,9 +1011,9 @@ Word index entry: {'word': 'player', 'locations': {'player first name': [0], 'pl
 <section id="metadata-dictionary" class="level3">
 <h3 class="anchored" data-anchor-id="metadata-dictionary">Metadata dictionary</h3>
 <p>The metadata dictionary is a new structure that I added in the last post.</p>
-<div id="67878f5e" class="cell" data-execution_count="30">
+<div id="acd39479" class="cell" data-execution_count="30">
 <div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>metadata_column_dictionary</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="81">
+<div class="cell-output cell-output-display" data-execution_count="30">
 <pre><code>{(1, 2, 3): [{'column': 'index', 'positions': [1, 2, 3]},
   {'column': 'index', 'positions': [4]},
   {'column': 'index', 'positions': [5]},
@@ -1040,7 +1040,7 @@ Word index entry: {'word': 'player', 'locations': {'player first name': [0], 'pl
 </section>
 <section id="search-algorithm-1" class="level2">
 <h2 class="anchored" data-anchor-id="search-algorithm-1">Search algorithm</h2>
-<div id="38e1eece" class="cell" data-execution_count="31">
+<div id="021744b8" class="cell" data-execution_count="31">
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> <span class="st">'justin'</span></span>
 <span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>query_word_locations_list <span class="op">=</span> get_query_word_column_locations(query, index_list, word_positions)</span>
@@ -1050,12 +1050,12 @@ Word index entry: {'word': 'player', 'locations': {'player first name': [0], 'pl
 Word locations: {'player first name': [1, 3]}.
 Query word location lists: [[{'column': (1, 2, 3), 'positions': [1, 3]}]].</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="82">
+<div class="cell-output cell-output-display" data-execution_count="31">
 <pre><code>[[{'column': (1, 2, 3), 'positions': [1, 3]}]]</code></pre>
 </div>
 </div>
 <p>Process query</p>
-<div id="fce1588c" class="cell" data-execution_count="32">
+<div id="754fcfdb" class="cell" data-execution_count="32">
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> <span class="st">'jarrian jones age'</span></span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>query_word_locations_list <span class="op">=</span> get_query_word_column_locations(query, index_list, word_positions)</span>
@@ -1069,7 +1069,7 @@ Query word location lists: [[{'column': (1, 2, 3), 'positions': [2]}], [{'column
 Word locations: {'player age': [0]}.
 Query word location lists: [[{'column': (1, 2, 3), 'positions': [2]}], [{'column': (1, 6, 3), 'positions': [2]}], [{'column': (1, 16), 'positions': [0]}]].</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="83">
+<div class="cell-output cell-output-display" data-execution_count="32">
 <pre><code>[[{'column': (1, 2, 3), 'positions': [2]}],
  [{'column': (1, 6, 3), 'positions': [2]}],
  [{'column': (1, 16), 'positions': [0]}]]</code></pre>
@@ -1078,7 +1078,7 @@ Query word location lists: [[{'column': (1, 2, 3), 'positions': [2]}], [{'column
 <p>Now I have (1) list containing (3) dictionaries; one for each of the words in my query. Each dictionary contains a set of key:value pairs where each key describes the name of a column in the database and each value indicates the position that the query word occurs at in that column.</p>
 <p>Now that I have my query location lists the next thing that I want to do is a column traversal search to find loops that connect all of these words. In order to find a loop I only need to check whether I can get from the column of one query word to the next. Because of that I do not need to use the column positions that are stored in the values of my dictionaries. I can simply use the keys.</p>
 <p>Another value of having the column names in this metadata format is that it is simpatico with the structure of the <code>metadata_column_dictionary</code> which contains all of the database connections that I will use for graph traversal.</p>
-<div id="40a8dbc9" class="cell" data-execution_count="33">
+<div id="27dd0f83" class="cell" data-execution_count="33">
 <div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>looped_query_locations_list <span class="op">=</span> query_word_locations_list.copy()</span>
 <span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>looped_query_locations_list.append(looped_query_locations_list[<span class="dv">0</span>])</span>
 <span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(looped_query_locations_list)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1087,7 +1087,7 @@ Query word location lists: [[{'column': (1, 2, 3), 'positions': [2]}], [{'column
 </div>
 </div>
 <p>Test column traversal search.</p>
-<div id="ab931569" class="cell" data-execution_count="34">
+<div id="8c801aa8" class="cell" data-execution_count="34">
 <div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>first_column <span class="op">=</span> (<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>)</span>
 <span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>last_columns <span class="op">=</span> [(<span class="dv">1</span>,<span class="dv">9</span>), (<span class="dv">1</span>,<span class="dv">13</span>)]</span>
 <span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -1098,7 +1098,7 @@ Query word location lists: [[{'column': (1, 2, 3), 'positions': [2]}], [{'column
 <span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>                                 columns_traversed <span class="op">=</span> [],</span>
 <span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>                                 viable_paths <span class="op">=</span> {})</span>
 <span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a>result</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="85">
+<div class="cell-output cell-output-display" data-execution_count="34">
 <pre><code>{}</code></pre>
 </div>
 </div>
@@ -1107,21 +1107,21 @@ Query word location lists: [[{'column': (1, 2, 3), 'positions': [2]}], [{'column
 </section>
 <section id="get-columns-in-loop" class="level2">
 <h2 class="anchored" data-anchor-id="get-columns-in-loop">Get columns in loop</h2>
-<div id="f5df96c0" class="cell" data-execution_count="35">
+<div id="1c60e88e" class="cell" data-execution_count="35">
 <div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>current_column <span class="op">=</span> (<span class="dv">1</span>,<span class="dv">6</span>,<span class="dv">3</span>)</span>
 <span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>columns_in_loop <span class="op">=</span> get_columns_in_loop(</span>
 <span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>                                      metadata_column_dictionary,</span>
 <span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>                                      current_column,</span>
 <span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>                                      columns_traversed<span class="op">=</span>[])</span>
 <span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>columns_in_loop</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="86">
+<div class="cell-output cell-output-display" data-execution_count="35">
 <pre><code>[(1, 6, 3), (1, 10), (1, 16), (1, 2, 3)]</code></pre>
 </div>
 </div>
 </section>
 <section id="find-loops-through-columns-that-connect-all-query-words" class="level2">
 <h2 class="anchored" data-anchor-id="find-loops-through-columns-that-connect-all-query-words">Find loops through columns that connect all query words</h2>
-<div id="6a739deb" class="cell" data-execution_count="36">
+<div id="679d4d80" class="cell" data-execution_count="36">
 <div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>find_query_loops_too(metadata_column_dictionary, query_word_locations_list)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Query word locations list: [[{'column': (1, 2, 3), 'positions': [2]}], [{'column': (1, 6, 3), 'positions': [2]}], [{'column': (1, 16), 'positions': [0]}]].
@@ -1150,13 +1150,13 @@ Endpoint pairs: [(((1, 16), 2), ((1, 2, 3), 2))].
 Endpoint scores: [1].
 Max score endpoints: [((((1, 16), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="87">
+<div class="cell-output cell-output-display" data-execution_count="36">
 <pre><code>[[{'start': ((1, 2, 3), 2), 'end': ((1, 6, 3), 2), 'score': 1}],
  [{'start': ((1, 6, 3), 2), 'end': ((1, 16), 2), 'score': 1}],
  [{'start': ((1, 16), 2), 'end': ((1, 2, 3), 2), 'score': 1}]]</code></pre>
 </div>
 </div>
-<div id="7f156efc" class="cell" data-execution_count="37">
+<div id="f72fb76e" class="cell" data-execution_count="37">
 <div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>edges <span class="op">=</span> find_query_loops_too(metadata_column_dictionary, query_word_locations_list) </span>
 <span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>edges</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -1194,7 +1194,7 @@ Endpoint pairs: [(((1, 2, 3), 2), ((1, 2, 3), 2))].
 Endpoint scores: [1].
 Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="88">
+<div class="cell-output cell-output-display" data-execution_count="37">
 <pre><code>[[{'start': ((1, 2, 3), 2), 'end': ((1, 6, 3), 2), 'score': 1}],
  [{'start': ((1, 6, 3), 2), 'end': ((1, 16), 2), 'score': 1}],
  [{'start': ((1, 16), 2), 'end': ((1, 2, 3), 2), 'score': 1}],
@@ -1203,7 +1203,7 @@ Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 </div>
 <p>Now that I have a list of viable edges I want to connect them together to make a loop. My edges are structured as a list of lists, or a matrix, of dictionaries. I was thinking I would create a dictionary in the format {start_node: [(end_node, score), (end_node, score)]}.</p>
 <p>Create a dictionary of edges.</p>
-<div id="74d90170" class="cell" data-execution_count="38">
+<div id="e4594a68" class="cell" data-execution_count="38">
 <div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>edges_dictionary <span class="op">=</span> {}</span>
 <span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> edge_list <span class="kw">in</span> edges:</span>
 <span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> edge <span class="kw">in</span> edge_list:</span>
@@ -1222,7 +1222,7 @@ Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 <pre><code>{((1, 2, 3), 2): [(((1, 6, 3), 2), 1), (((1, 2, 3), 2), 1)], ((1, 6, 3), 2): [(((1, 16), 2), 1)], ((1, 16), 2): [(((1, 2, 3), 2), 1)]}</code></pre>
 </div>
 </div>
-<div id="526c309b" class="cell" data-execution_count="39">
+<div id="be287dd2" class="cell" data-execution_count="39">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> choose_next_edge(current_node, edges_dictionary, loop<span class="op">=</span>{}):</span>
 <span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># How do I want to organize my edges?</span></span>
 <span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># I could create a list of nodes.</span></span>
@@ -1239,7 +1239,7 @@ Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 <span id="cb67-14"><a href="#cb67-14" aria-hidden="true" tabindex="-1"></a>        next_nodes <span class="op">=</span> edges_dictionary[current_node]</span>
 <span id="cb67-15"><a href="#cb67-15" aria-hidden="true" tabindex="-1"></a>        <span class="co"># next_node = random() </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="77d44e2c" class="cell" data-execution_count="40">
+<div id="bd389591" class="cell" data-execution_count="40">
 <div class="sourceCode cell-code" id="cb68"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_a_loop(current_node, edges_dictionary, loop<span class="op">=</span>[]):</span>
 <span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">#if current_node in loop[:1]:</span></span>
 <span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#    return tuple(loop)</span></span>
@@ -1270,7 +1270,7 @@ Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 <span id="cb68-28"><a href="#cb68-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> make_a_loop(next_node[<span class="dv">0</span>], edges_dictionary, loop)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>With my dictionary of edges I want to create a loop.</p>
-<div id="9f3b7479" class="cell" data-execution_count="41">
+<div id="b4641873" class="cell" data-execution_count="41">
 <div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>all_loops <span class="op">=</span> []</span>
 <span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> start_node <span class="kw">in</span> edges_dictionary.keys():</span>
 <span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    loop <span class="op">=</span> make_a_loop(start_node, edges_dictionary,loop<span class="op">=</span>[])</span>
@@ -1290,7 +1290,7 @@ Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 ((1, 6, 3), 2)
 ((1, 16), 2)</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="92">
+<div class="cell-output cell-output-display" data-execution_count="41">
 <pre><code>[((((1, 6, 3), 2), 1), (((1, 16), 2), 1), (((1, 2, 3), 2), 1)),
  ((((1, 16), 2), 1), (((1, 2, 3), 2), 1), (((1, 6, 3), 2), 1)),
  ((((1, 2, 3), 2), 1), (((1, 6, 3), 2), 1), (((1, 16), 2), 1))]</code></pre>
@@ -1300,7 +1300,7 @@ Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 </section>
 <section id="cumulatively-scored-loops" class="level1">
 <h1>Cumulatively scored loops</h1>
-<div id="138b5e13" class="cell" data-execution_count="42">
+<div id="9309c3b5" class="cell" data-execution_count="42">
 <div class="sourceCode cell-code" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>cumulatively_scored_loops <span class="op">=</span> []</span>
 <span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> loop <span class="kw">in</span> all_loops:</span>
 <span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Reference: https://stackoverflow.com/a/25047602</span></span>
@@ -1308,7 +1308,7 @@ Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 <span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>    scored_loop <span class="op">=</span> (loop, cumulative_loop_score)</span>
 <span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a>    cumulatively_scored_loops.append(scored_loop)</span>
 <span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a>cumulatively_scored_loops </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="93">
+<div class="cell-output cell-output-display" data-execution_count="42">
 <pre><code>[(((((1, 6, 3), 2), 1), (((1, 16), 2), 1), (((1, 2, 3), 2), 1)), 3),
  (((((1, 16), 2), 1), (((1, 2, 3), 2), 1), (((1, 6, 3), 2), 1)), 3),
  (((((1, 2, 3), 2), 1), (((1, 6, 3), 2), 1), (((1, 16), 2), 1)), 3)]</code></pre>
@@ -1318,9 +1318,9 @@ Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 </section>
 <section id="a-set-of-loops" class="level1">
 <h1>A set of loops</h1>
-<div id="3de4fe65" class="cell" data-execution_count="43">
+<div id="6184d476" class="cell" data-execution_count="43">
 <div class="sourceCode cell-code" id="cb74"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span>(all_loops)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="94">
+<div class="cell-output cell-output-display" data-execution_count="43">
 <pre><code>{((((1, 2, 3), 2), 1), (((1, 6, 3), 2), 1), (((1, 16), 2), 1)),
  ((((1, 6, 3), 2), 1), (((1, 16), 2), 1), (((1, 2, 3), 2), 1)),
  ((((1, 16), 2), 1), (((1, 2, 3), 2), 1), (((1, 6, 3), 2), 1))}</code></pre>
@@ -1330,9 +1330,9 @@ Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 <section id="sort-loops-by-cumulative-score-and-select-the-highest-scored-loop" class="level1">
 <h1>Sort loops by cumulative score and select the highest scored loop</h1>
 <p>I do not think that this steps is adding value.</p>
-<div id="f78f37cb" class="cell" data-execution_count="44">
+<div id="fe5a29b7" class="cell" data-execution_count="44">
 <div class="sourceCode cell-code" id="cb76"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="bu">sorted</span>(cumulatively_scored_loops, key<span class="op">=</span><span class="kw">lambda</span> loop: loop[<span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="95">
+<div class="cell-output cell-output-display" data-execution_count="44">
 <pre><code>[(((((1, 6, 3), 2), 1), (((1, 16), 2), 1), (((1, 2, 3), 2), 1)), 3),
  (((((1, 16), 2), 1), (((1, 2, 3), 2), 1), (((1, 6, 3), 2), 1)), 3),
  (((((1, 2, 3), 2), 1), (((1, 6, 3), 2), 1), (((1, 16), 2), 1)), 3)]</code></pre>
@@ -1341,14 +1341,14 @@ Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 </section>
 <section id="section" class="level1">
 <h1></h1>
-<div id="358e2ff6" class="cell" data-execution_count="45">
+<div id="154c5cc2" class="cell" data-execution_count="45">
 <div class="sourceCode cell-code" id="cb78"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>maximum_loop_score <span class="op">=</span> <span class="bu">max</span>(loop[<span class="op">-</span><span class="dv">1</span>] <span class="cf">for</span> loop <span class="kw">in</span> cumulatively_scored_loops)</span>
 <span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>maximum_loop_score</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="96">
+<div class="cell-output cell-output-display" data-execution_count="45">
 <pre><code>3</code></pre>
 </div>
 </div>
-<div id="b1cbe310" class="cell" data-execution_count="46">
+<div id="0f90d6b1" class="cell" data-execution_count="46">
 <div class="sourceCode cell-code" id="cb80"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>highest_scored_loops <span class="op">=</span> [</span>
 <span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>                        loop <span class="cf">for</span> loop </span>
 <span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">in</span> cumulatively_scored_loops</span>
@@ -1358,17 +1358,17 @@ Max score endpoints: [((((1, 2, 3), 2), ((1, 2, 3), 2)), 1)].</code></pre>
 <section id="a-sorted-set-of-loops" class="level1">
 <h1>A sorted set of loops</h1>
 <p>I ignore the cumulative loop score when sorting.</p>
-<div id="464997c0" class="cell" data-execution_count="47">
+<div id="d04adc58" class="cell" data-execution_count="47">
 <div class="sourceCode cell-code" id="cb81"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="bu">sorted</span>(highest_scored_loops, key<span class="op">=</span><span class="kw">lambda</span> loop: loop[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="98">
+<div class="cell-output cell-output-display" data-execution_count="47">
 <pre><code>[(((((1, 2, 3), 2), 1), (((1, 6, 3), 2), 1), (((1, 16), 2), 1)), 3),
  (((((1, 6, 3), 2), 1), (((1, 16), 2), 1), (((1, 2, 3), 2), 1)), 3),
  (((((1, 16), 2), 1), (((1, 2, 3), 2), 1), (((1, 6, 3), 2), 1)), 3)]</code></pre>
 </div>
 </div>
-<div id="091bac05" class="cell" data-execution_count="48">
+<div id="100a587b" class="cell" data-execution_count="48">
 <div class="sourceCode cell-code" id="cb83"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="bu">len</span>(highest_scored_loops)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="99">
+<div class="cell-output cell-output-display" data-execution_count="48">
 <pre><code>3</code></pre>
 </div>
 </div>
@@ -1396,7 +1396,7 @@ chosen_edges</code></pre>
 response_documents</code></pre>
 <p>Now I have the documents that contain the results that I am looking for. In order to generate a response I also need the positions of the original query words in those documents. For locations with a non-zero position this is trivial because I can retain the original position. Locations with a zero value I treat as variables because they refer to entire columns rather than specific entries.</p>
 <p>In the case of variables I want to infer the appropriate row to return a value from by looking at the rows of the surrounding words. For instance if I query “jarrian jones age” and age is at the zero position then I would want to look at which positions “jones” and “jarrian” are in because they are the adjacent words when I consider this query as a loop. If those adjacent words occupy different rows then I can decide which one to prioritize and return both results. I will probably prioritize the row of the previous word over the next word.</p>
-<div id="cf8c73c0" class="cell" data-execution_count="49">
+<div id="c2533a61" class="cell" data-execution_count="49">
 <div class="sourceCode cell-code" id="cb89"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_previous_position(current_position, query_word_locations_lists):</span>
 <span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> current_position <span class="op">==</span> <span class="dv">0</span>:</span>
 <span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>        <span class="co"># If the current document is the first in the loop then the previous document is the last.</span></span>
@@ -1405,7 +1405,7 @@ response_documents</code></pre>
 <span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a>        previous_position <span class="op">=</span> current_position <span class="op">-</span> <span class="dv">1</span></span>
 <span id="cb89-7"><a href="#cb89-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> previous_position</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="f581a238" class="cell" data-execution_count="50">
+<div id="c2ab1b7d" class="cell" data-execution_count="50">
 <div class="sourceCode cell-code" id="cb90"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_next_position(current_position, query_locations_lists):</span>
 <span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> current_position <span class="op">==</span> <span class="bu">len</span>(query_locations_lists) <span class="op">-</span> <span class="dv">1</span>:</span>
 <span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a>        <span class="co"># If the current document is the last in the loop then the next document is the first.</span></span>
@@ -1414,7 +1414,7 @@ response_documents</code></pre>
 <span id="cb90-6"><a href="#cb90-6" aria-hidden="true" tabindex="-1"></a>        next_position <span class="op">=</span> current_position <span class="op">+</span> <span class="dv">1</span></span>
 <span id="cb90-7"><a href="#cb90-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> next_position</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="32e982c2" class="cell" data-execution_count="51">
+<div id="598f26e9" class="cell" data-execution_count="51">
 <div class="sourceCode cell-code" id="cb91"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> assign_document_positions(response_documents, query_locations_lists):</span>
 <span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> query_position, document <span class="kw">in</span> <span class="bu">enumerate</span>(response_documents):</span>
 <span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>        </span>
