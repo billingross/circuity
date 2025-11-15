@@ -1,0 +1,114 @@
+---
+title: "Player database: example queries"
+author: "Paul Billing-Ross"
+date: "2025-11-14"
+categories: [missing data,queries]
+---
+# Introduction
+Now that I have packaged Circuity Database and uploaded it to PyPI I can import it as a Python dependency and use it programmatically.
+
+# Functions
+## Load dependencies
+```{python}
+#| code-fold: true
+
+# Circuity database
+import circuitydatabase as circuity
+
+# Logging
+import logging
+
+# Manipulate files
+import os
+from pathlib import Path
+# Read comma separated values file
+import csv
+# Manipulate the database structures
+import json
+
+# Manipulate lists
+import random
+import itertools
+from operator import itemgetter
+```
+
+# Initialize database
+## Create database structures
+```{python}
+csv_file_path = 'jaguars-offensive-players.csv'
+```
+
+## Populate database
+```{python}
+database = circuity.initialize_database()
+database = circuity.import_comma_separated_values(database, csv_file_path)
+```
+
+# Example queries
+## Get the age of a player by name
+```{python}
+query = 'parker washington age'
+result = circuity.process_query(database, query)
+result
+```
+
+## Get the position of a player by name
+```{python}
+query = 'parker washington position'
+result = circuity.process_query(database, query)
+result
+```
+
+## This one errors out
+```
+query = 'name wide receiver'
+result = circuity.process_query(database, query)
+result
+```
+
+## This one kind of works
+All of these people are wide receivers except that not all of the wide receivers are listed and it includes their first and last names.
+```{python}
+query = 'wide receiver last name'
+results = circuity.process_query(database, query)
+",".join(results)
+```
+
+## This one also kind of works
+There are (2) columns that include the word `height`: `height feet` and `height inches`. What I am looking for is a single result that includes both and instead I got (2) results that only include his height in feet.
+```{python}
+query = 'trevor lawrence height'
+results = circuity.process_query(database, query)
+",".join(results)
+```
+
+## This one errors out
+`RecursionError: maximum recursion depth exceeded`
+```
+query = 'trevor lawrence years of experience'
+results = circuity.process_query(database, query)
+",".join(results)
+```
+
+## This one kind of works
+It returns his height in feet and inches and in an awkward order
+```{python}
+query = 'nick mullens height inches'
+results = circuity.process_query(database, query)
+",".join(results)
+```
+
+## This one returns (2) invalid results
+```{python}
+query = 'brown college'
+results = circuity.process_query(database, query)
+",".join(results)
+```
+
+## This returns (2) invalid results
+The word "college" is in the name of "Boston College" which seems to be confounding the algorithm. 
+```{python}
+query = 'robert hainsey college'
+results = circuity.process_query(database, query)
+",".join(results)
+```
