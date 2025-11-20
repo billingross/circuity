@@ -1,8 +1,8 @@
 ---
 title: "Player database: example queries"
 author: "Paul Billing-Ross"
-date: "2025-11-14"
-categories: [missing data,queries]
+date: "2025-11-20"
+categories: [example,query]
 ---
 # Introduction
 Now that I have packaged Circuity Database and uploaded it to PyPI I can import it as a Python dependency and use it programmatically.
@@ -18,6 +18,9 @@ import circuitydatabase as circuity
 # Logging
 import logging
 
+# Check version
+import sys
+
 # Manipulate files
 import os
 from pathlib import Path
@@ -32,6 +35,11 @@ import itertools
 from operator import itemgetter
 ```
 
+## Check Python version
+```{python}
+print(sys.version)
+```
+
 # Initialize database
 ## Create database structures
 ```{python}
@@ -42,73 +50,165 @@ csv_file_path = 'jaguars-offensive-players.csv'
 ```{python}
 database = circuity.initialize_database()
 database = circuity.import_comma_separated_values(database, csv_file_path)
+print(database['index_list'])
 ```
 
 # Example queries
-## Get the age of a player by name
 ```{python}
-query = 'parker washington age'
-result = circuity.process_query(database, query)
-result
+#logging.basicConfig(level=logging.DEBUG)
 ```
 
-## Get the position of a player by name
-```{python}
-query = 'parker washington position'
-result = circuity.process_query(database, query)
-result
-```
-
-## This one errors out
-```
-query = 'name wide receiver'
-result = circuity.process_query(database, query)
-result
-```
-
-## This one kind of works
-All of these people are wide receivers except that not all of the wide receivers are listed and it includes their first and last names.
-```{python}
-query = 'wide receiver last name'
-results = circuity.process_query(database, query)
-",".join(results)
-```
-
-## This one also kind of works
-There are (2) columns that include the word `height`: `height feet` and `height inches`. What I am looking for is a single result that includes both and instead I got (2) results that only include his height in feet.
+### Get the height values of a player.
 ```{python}
 query = 'trevor lawrence height'
 results = circuity.process_query(database, query)
-",".join(results)
+merged_results_dictionary = {
+                             key: [dict[key] for dict in results]
+                             for key in results[0]
+}
+result_values_matrix = circuity.transpose_matrix(list(merged_results_dictionary.values()))
+print(",".join(merged_results_dictionary.keys()))
+for result_values_list in result_values_matrix:
+    print(",".join(result_values_list))
 ```
 
-## This one errors out
-`RecursionError: maximum recursion depth exceeded`
-```
-query = 'trevor lawrence years of experience'
-results = circuity.process_query(database, query)
-",".join(results)
-```
-
-## This one kind of works
-It returns his height in feet and inches and in an awkward order
+### Get the age of a player with a complex last name.
 ```{python}
-query = 'nick mullens height inches'
+query = 'travis etienne jr. age'
 results = circuity.process_query(database, query)
-",".join(results)
+merged_results_dictionary = {
+                             key: [dict[key] for dict in results]
+                             for key in results[0]
+}
+result_values_matrix = circuity.transpose_matrix(list(merged_results_dictionary.values()))
+print(",".join(merged_results_dictionary.keys()))
+for result_values_list in result_values_matrix:
+    print(",".join(result_values_list))
 ```
 
-## This one returns (2) invalid results
+### Get the names and ages of all of the wide receives on the Jacksonville Jaguars.
+```{python}
+query = 'jacksonville jaguars wide receiver name age'
+results = circuity.process_query(database, query)
+merged_results_dictionary = {
+                             key: [dict[key] for dict in results]
+                             for key in results[0]
+}
+result_values_matrix = circuity.transpose_matrix(list(merged_results_dictionary.values()))
+print(",".join(merged_results_dictionary.keys()))
+for result_values_list in result_values_matrix:
+    print(",".join(result_values_list))
+```
+
+### Get the names of all the wide receivers.
+```{python}
+query = 'name wide receiver'
+results = circuity.process_query(database, query)
+merged_results_dictionary = {
+                             key: [dict[key] for dict in results]
+                             for key in results[0]
+}
+result_values_matrix = circuity.transpose_matrix(list(merged_results_dictionary.values()))
+print(",".join(merged_results_dictionary.keys()))
+for result_values_list in result_values_matrix:
+    print(",".join(result_values_list))
+```
+
+### Get the ages of quarterbacks on the Jacksonville Jaguars.
+```{python}
+query = 'jaguars quarterback age'
+results = circuity.process_query(database, query)
+merged_results_dictionary = {
+                             key: [dict[key] for dict in results]
+                             for key in results[0]
+}
+result_values_matrix = circuity.transpose_matrix(list(merged_results_dictionary.values()))
+print(",".join(merged_results_dictionary.keys()))
+for result_values_list in result_values_matrix:
+    print(",".join(result_values_list))
+```
+
+### Get the college a player attended by last name.
 ```{python}
 query = 'brown college'
 results = circuity.process_query(database, query)
-",".join(results)
+merged_results_dictionary = {
+                             key: [dict[key] for dict in results]
+                             for key in results[0]
+}
+result_values_matrix = circuity.transpose_matrix(list(merged_results_dictionary.values()))
+print(",".join(merged_results_dictionary.keys()))
+for result_values_list in result_values_matrix:
+    print(",".join(result_values_list))
 ```
 
-## This returns (2) invalid results
-The word "college" is in the name of "Boston College" which seems to be confounding the algorithm. 
+### Get the college a player attended by full name.
 ```{python}
 query = 'robert hainsey college'
 results = circuity.process_query(database, query)
-",".join(results)
+merged_results_dictionary = {
+                             key: [dict[key] for dict in results]
+                             for key in results[0]
+}
+result_values_matrix = circuity.transpose_matrix(list(merged_results_dictionary.values()))
+print(",".join(merged_results_dictionary.keys()))
+for result_values_list in result_values_matrix:
+    print(",".join(result_values_list))
+```
+
+### Get the age of a player by name.
+```{python}
+query = 'parker washington age'
+results = circuity.process_query(database, query)
+merged_results_dictionary = {
+                             key: [dict[key] for dict in results]
+                             for key in results[0]
+}
+result_values_matrix = circuity.transpose_matrix(list(merged_results_dictionary.values()))
+print(",".join(merged_results_dictionary.keys()))
+for result_values_list in result_values_matrix:
+    print(",".join(result_values_list))
+```
+
+### Get player years of experience
+```{python}
+query = 'trevor lawrence years of experience'
+results = circuity.process_query(database, query)
+merged_results_dictionary = {
+                             key: [dict[key] for dict in results]
+                             for key in results[0]
+}
+result_values_matrix = circuity.transpose_matrix(list(merged_results_dictionary.values()))
+print(",".join(merged_results_dictionary.keys()))
+for result_values_list in result_values_matrix:
+    print(",".join(result_values_list))
+```
+
+### Get player height inches measurement
+It at least sometimes returns his height in feet and inches and in an awkward order.
+```{python}
+query = 'nick mullens height inches'
+results = circuity.process_query(database, query)
+merged_results_dictionary = {
+                             key: [dict[key] for dict in results]
+                             for key in results[0]
+}
+result_values_matrix = circuity.transpose_matrix(list(merged_results_dictionary.values()))
+print(",".join(merged_results_dictionary.keys()))
+for result_values_list in result_values_matrix:
+    print(",".join(result_values_list))
+```
+
+### Get player height feet measurement
+```{python}
+query = 'nick mullens height feet'
+results = circuity.process_query(database, query)
+merged_results_dictionary = {
+                             key: [dict[key] for dict in results]
+                             for key in results[0]
+}
+result_values_matrix = circuity.transpose_matrix(list(merged_results_dictionary.values()))
+print(",".join(merged_results_dictionary.keys()))
+for result_values_list in result_values_matrix:
+    print(",".join(result_values_list))
 ```
