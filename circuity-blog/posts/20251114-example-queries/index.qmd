@@ -5,7 +5,7 @@ date: "2025-11-20"
 categories: [example,query]
 ---
 # Introduction
-Now that I have packaged Circuity Database and uploaded it to PyPI I can import it as a Python dependency and use it programmatically.
+Now that I have packaged Circuity Database and [uploaded it to PyPI](https://pypi.org/project/circuitydatabase) I can import it as a Python dependency and use it programmatically.
 
 # Functions
 ## Load dependencies
