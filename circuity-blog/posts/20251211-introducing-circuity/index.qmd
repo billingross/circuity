@@ -1,0 +1,26 @@
+---
+title: "Introducing the Circuity database management system"
+author: "Paul Billing-Ross"
+date: "2025-12-11"
+categories: [introduction]
+---
+# Introduction
+The Circuity database management software is available for download [from PyPI](https://pypi.org/project/circuitydatabase) for use on a local computer or for use online through [Circuity Live](https://circuity-database.uw.r.appspot.com/).
+
+# How does Circuity organize data?
+Circuity is designed to handle data organized as a matrix or table such as a comma separated values file that can be imported into a tool such as Microsoft Excel or Google Sheets. An example of National Football League roster data that can be imported into a Circuity database and queried can be found [here](https://drive.google.com/drive/folders/1xhA3-Pg-acR1cj97urgKJ0oo7NrLd-GV).
+
+## Importing data
+Importing data into Circuity involves transforming data from a matrix into an index of word locations and a dictionary of columns where each column contains references to words or numerical values.
+
+# Features
+| Feature | Description | Competitors |
+| --- | --- | --- |
+| Python-native | Circuity is implemented entirely in the Python programming language and can be installed used PyPI and used without additional software or setup. | | [ZODB](https://zodb.org/en/latest/index.html) |
+| Functional | The logic of Circuity is implemented entirely with functions as opposed to being object-oriented. | |
+| Data stored as Python-native data structures | Data are  stored in the basic [Python data structures](https://docs.python.org/3/tutorial/datastructures.html) of lists and dictionaries as opposed to custom objects. | |
+| Data stored in memory | Data is stored in memory as lists and dictionaries. | [Many](https://en.wikipedia.org/wiki/List_of_in-memory_databases) |
+| Analytical or read-only | It is designed to perform operations on static data rather than by supporting write or change operations. | Google BigQuery, Amazon Athena |
+| Queryable using only words present in the data | Circuity relies on word matching to find query results. There are no special words or query language syntax (such as [SQL](https://en.wikipedia.org/wiki/SQL) or [Cypher](https://neo4j.com/docs/getting-started/cypher/)) required for searching. This is due to the design of the search algorithm structure of the database and does not rely on any machine learning approaches to transforming natural language into query language. | |
+| All words are stored in a central index | Circuity treats data as words or number where a word is defined as a contiguous set of symbols with at least one non-numerical symbol and a number is a contiguous set of numbers with an optional decimal. | |
+| Data organized by column | | Examples from [Expert Insights](https://expertinsights.com/data-management/the-top-columnar-databases) | 
