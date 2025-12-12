@@ -23,4 +23,67 @@ Importing data into Circuity involves transforming data from a matrix into an in
 | Analytical or read-only | It is designed to perform operations on static data rather than by supporting write or change operations. | Google BigQuery, Amazon Athena |
 | Queryable using only words present in the data | Circuity relies on word matching to find query results. There are no special words or query language syntax (such as [SQL](https://en.wikipedia.org/wiki/SQL) or [Cypher](https://neo4j.com/docs/getting-started/cypher/)) required for searching. This is due to the design of the search algorithm structure of the database and does not rely on any machine learning approaches to transforming natural language into query language. | |
 | All words are stored in a central index | Circuity treats data as words or number where a word is defined as a contiguous set of symbols with at least one non-numerical symbol and a number is a contiguous set of numbers with an optional decimal. | |
-| Data organized by column | | Examples from [Expert Insights](https://expertinsights.com/data-management/the-top-columnar-databases) | 
+| Data organized by column | | Examples from [Expert Insights](https://expertinsights.com/data-management/the-top-columnar-databases) |
+
+# Circuity logic walkthrough
+## Load Python dependencies
+```{python}
+import circuitydatabase as circuity
+```
+
+## Initialize the database
+Initializing the database creates (3) data structures. The first structure is what I call the index.The index is a list of dictionaries where a dictionary is a set of key-value pairs. Each dictionary contains (2) key-value pairs: the name of the word and all the locations where that word occurs in the database.
+
+The second data structure is a dictionary that describes the position that each word occurs at in the index which I call the word positions dictionary. I use the word positions dictionary to lookup the location of words in the index. When I initialize the database it is populated with the information for a single word: "index" which occurs at the zero index of the index itself. 
+
+I return both of these data structures in a third dictionary of (2) items where the keys are `index_list` for the index and `word_positions` for the word positions dictionary.
+
+```{python}
+database = circuity.initialize_database()
+database
+```
+
+I can look at the index and word positions dictionary separately using their dictionary keys.
+```{python}
+database['index_list']
+```
+
+```{python}
+database['word_positions']
+```
+
+## Importing data
+Here I have created a comma separated values file containing contact information for several people that I will load into the database that I just created using the Circuity `import_comma_separated_values()` function. This function will update the index and word positions dictionary to include all of the data in the `contacts.csv` file.
+
+```{python}
+csv_file_path = 'contacts.csv'
+database = circuity.import_comma_separated_values(database, csv_file_path)
+database.keys()
+```
+
+When I pass the `database` dictionary to the `import_comma_separated_values` function it returns an updated version of the database with (2) additional data structures: `column_names` and `metadata_column_dictionary`. The `column_names` key points to a list of all the names of the columns or headers in the table I just imported. I generate this list in order to better understand what data is available for querying.
+```{python}
+database['column_names']
+```
+
+The `metadata_column_dictionary` mirrors the original tabular data structure except all the words have been replaced with index references. This can serve as a sort of anonymized version of my data structure that can be translated back into words using the index. All of the columns containing numerical values remain unchanged.
+```{python}
+database['metadata_column_dictionary']
+```
+
+They keys of the `metadata_column_dictionary` correspond to the original column names. Each column name includes the table name as the first element which is why all of these keys start with the same number.
+```{python}
+metadata_column_dictionary = database['metadata_column_dictionary']
+column_keys = list(metadata_column_dictionary.keys())
+column_keys
+```
+
+A column key of `(1, 2, 3)` can be translated back into a natural language name by mapping each number in the key to the word stored at that position in the index.
+```{python}
+index_list = database['index_list']
+
+column_key = column_keys[0]
+column_words = [index_list[position]['word'] for position in column_key]
+column_name = " ".join(column_words)
+column_name
+```
