@@ -31,7 +31,7 @@ Importing data into Circuity involves transforming data from a matrix into an in
 import circuitydatabase as circuity
 ```
 
-## Initialize the database
+## Initializing the database
 Initializing the database creates (3) data structures. The first structure is what I call the index.The index is a list of dictionaries where a dictionary is a set of key-value pairs. Each dictionary contains (2) key-value pairs: the name of the word and all the locations where that word occurs in the database.
 
 The second data structure is a dictionary that describes the position that each word occurs at in the index which I call the word positions dictionary. I use the word positions dictionary to lookup the location of words in the index. When I initialize the database it is populated with the information for a single word: "index" which occurs at the zero index of the index itself. 
@@ -85,5 +85,37 @@ index_list = database['index_list']
 column_key = column_keys[0]
 column_words = [index_list[position]['word'] for position in column_key]
 column_name = " ".join(column_words)
-column_name
+print(f"Column key: {column_key}. Column name: '{column_name}'.")
 ```
+
+The values in each cell of the of the column can be translated back into words in the same way.
+```{python}
+metadata_column_values = list(metadata_column_dictionary.values())
+example_cell_value = metadata_column_values[0][1]
+example_cell_value
+```
+
+Circuity checks whether the value of a cell is a numerical type or a dictionary before returning any query results. If it is a dictionary then the program will transform it into a word.
+```{python}
+example_cell_words = [index_list[position]['word'] for position in example_cell_value['positions']]
+example_cell_words
+```
+
+## Querying the database
+Circuity is designed to support unstructured natural language queries. Users provide keywords in any order to retrieve the results they want. If the word is present in a column cell then Circuity will treat is as an independent variable or static value. If it is found in the column header then Circuity treats it as a dependent variable and will try to return the cell in that column that is most closely aligned with the column positions of the surrounding words in the query phrase.
+
+Circuity measures the proximity of adjoining words in a query phrase using a boolean metric that determines whether the words are in the same row or different rows in order to prioritize results where all of the values occur in the same row.
+
+### Transforming query words into column locations
+The first step in processing a query is to transform it from words to column locations. Because the indexing of each column starts with zero any word at position zero is in a column header.
+```{python}
+query = "ian age"
+word_positions = database['word_positions']
+
+query_word_locations_list = circuity.get_query_word_column_locations(
+                                                                     query,
+                                                                     index_list,
+                                                                     word_positions)
+query_word_locations_list
+```
+
